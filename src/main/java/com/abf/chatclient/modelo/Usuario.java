@@ -21,6 +21,7 @@ public class Usuario {
      * @param ip      ip del usuario
      * @param puerto  puerto del usuario
      */
+    
     public Usuario ( String nick, String ip, int puerto) {
     this.nick = nick;
     this.ip = ip;
