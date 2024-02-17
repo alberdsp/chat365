@@ -43,39 +43,28 @@ public class ServidorController implements Runnable{
             ServerSocket ss = new ServerSocket(9990);
             serverForm.getjTextAreaChatGeneral().setText("Servidor " +
                     ss.getInetAddress() + " escuchando en el puerto " +
-                    ss.getLocalPort() + "...");
+                    ss.getLocalPort() + "\n");
             
             while (true) {
                 Socket s = ss.accept();
-                serverForm.getjTextAreaChatGeneral().setText("Se ha conectado un cliente " + s.getInetAddress() + " al puerto " + s.getPort());
-                new Thread(new ClienteHandler(s)).start();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private class ClienteHandler implements Runnable {
-        private Socket socket;
-
-        public ClienteHandler(Socket socket) {
-            this.socket = socket;
-        }
-
-        @Override
-        public void run() {
-            try (
-                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                DataInputStream dis = new DataInputStream(socket.getInputStream())
-            ) {
+                serverForm.getjTextAreaChatGeneral().setText("Se ha conectado un cliente " + s.getInetAddress() + " al puerto " + s.getPort()+"\n");
+             
+                DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+                DataInputStream dis = new DataInputStream(s.getInputStream());
+        
                 String datoCliente;
                 while (!(datoCliente = dis.readUTF()).equals("exit")) {
-                    System.out.println("Mensaje recibido del cliente: " + datoCliente);
-                    dos.writeUTF("Mensaje del servidor: " + datoCliente);
+                     serverForm.getjTextAreaChatGeneral().append("Mensaje recibido del cliente: " + datoCliente+"\n");
+                      dos.writeUTF("Mensaje del servidor: " + " recibido ");
+                      
                 }
-            } catch (IOException e) {
+           
+        
+        }   } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-            
-    }}
+     
+
+   
+    }
+}

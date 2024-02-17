@@ -2,22 +2,49 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.abf.chatclient;
+package com.abf.chatclient.controller;
 
-import java.net.*;
-import java.io.*;
-
+import com.abf.chatclient.modelo.Usuario;
+import com.abf.chatclient.modelo.vista.ChatClientForm;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
-public class ClienteChat {
-	public static void main(String[] args) {
-		// Inicializamos el Scanner para tomar datos de teclado
+/**
+ *
+ * @author Alber
+ */
+public class ClienteController implements Runnable{
+    
+       private Map<String, Usuario> usuarios;
+       private ChatClientForm chatClientForm;
+       
+       
+      public ClienteController(ChatClientForm chatClientForm){
+      
+      this.chatClientForm = chatClientForm;
+      this.usuarios = new HashMap<>();
+      
+      
+      }
+       
+  
+
+    @Override
+    public void run() {
+        
+        // Inicializamos el Scanner para tomar datos de teclado
 		Scanner sc=new Scanner(System.in);
 		// Aqu� recojo lo que escribe el cliente
 		String dato_cliente="";
 		try {
 			// Lanzo el socket del cliente para conectar al "localhost" servidor por el puerto 7040
-			Socket s=new Socket("192.168.100.137",9990);
+			Socket s=new Socket("192.168.100.134",9990);
 			// Muestro el mensaje de conexi�n
 			System.out.println("Conectado al servidor por el puerto "+s.getPort());
 			// Inicializo los flujos de entrada/salida a trav�s del Socket "s"
@@ -43,4 +70,14 @@ public class ClienteChat {
 			e.printStackTrace();
 		}
 	}
-}
+        
+        
+        
+       
+    }
+    
+    
+    
+    
+    
+    
