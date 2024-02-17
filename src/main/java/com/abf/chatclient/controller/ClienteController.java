@@ -4,6 +4,8 @@
  */
 package com.abf.chatclient.controller;
 
+import com.abf.chatclient.modelo.Chat;
+import com.abf.chatclient.modelo.Mensaje;
 import com.abf.chatclient.modelo.Servidor;
 import com.abf.chatclient.modelo.Usuario;
 import com.abf.chatclient.modelo.vista.ChatClientForm;
@@ -23,9 +25,11 @@ import java.awt.AWTEvent.*;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Map.Entry;
 
 /**
  *
@@ -33,11 +37,11 @@ import java.util.logging.Logger;
  */
 public class ClienteController implements Runnable {
 
-    private HashMap<String, Usuario> usuarios;
-    private TreeMap<String, String> chats;
+    private Chat chat;
+
     private ChatClientForm chatClientForm;
     private Servidor servidor;
-
+    private Mensaje mensaje;
     private JButton jButtonEnviar;
     private JTextArea jTextAreaChat;
     private JList<String> jListUsuarios;
@@ -51,7 +55,7 @@ public class ClienteController implements Runnable {
     public ClienteController(ChatClientForm chatClientForm) {
 
         this.chatClientForm = chatClientForm;
-        this.usuarios = new HashMap<>();
+        this.chat = new Chat();
 
     }
 
@@ -62,7 +66,7 @@ public class ClienteController implements Runnable {
 
     }
 
-    private void iniciarChat() {
+    private void iniciarChat()  {
 
         try {
 
@@ -77,7 +81,11 @@ public class ClienteController implements Runnable {
             // Muestro el mensaje de conexi�n
             chatClientForm.getjTextAreaSala().setText("Conectado al servidor por el puerto " + s.getPort() + "\n");
             // Inicializo los flujos de entrada/salida a trav�s del Socket "s"
-            DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+            // Crear un ObjectInputStream utilizando el InputStream del socket cliente
+            ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
+            ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
+
+
             DataInputStream dis = new DataInputStream(s.getInputStream());
             jToggleConectar.setText("ON");
 
@@ -89,9 +97,10 @@ public class ClienteController implements Runnable {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    mensajetxt = chatClientForm.getjTextFieldTextoAenviar().getText();
                     try {
-                        dos.writeUTF(mensajetxt);
+                        mensajetxt = chatClientForm.getjTextFieldTextoAenviar().getText();
+                        mensaje.setMensaje(mensajetxt);
+                        oos.writeObject(mensaje);
                         mensajetxt = "";
                         chatClientForm.getjTextFieldTextoAenviar().setText("");
                     } catch (IOException ex) {
@@ -101,21 +110,39 @@ public class ClienteController implements Runnable {
                 }
             });
 
-            String prueba;
-            while (conectado) {
-
-                // Muestro por pantalla el mensaje que me env�a el servidor mediante el InputStream
           
+            while (conectado) {
+            // Leer el objeto enviado por el cliente
+            Object objetoRecibido = ois.readObject();
+
            
-                chatClientForm.getjTextAreaSala().setText(dis.readUTF() + "\n");
+            // Procesar el objeto recibido
+            if (objetoRecibido instanceof Mensaje) {
+                String mensajeRecibido = ((Mensaje) objetoRecibido).getMensaje();
+                chatClientForm.getjTextAreaSala().setText("Mensaje recibido del cliente: " + mensajeRecibido+"\n");
+            } else if
+            
+                  // Procesar el objeto recibido
+                (objetoRecibido instanceof Chat) {
+                 this.chat = (Chat) objetoRecibido;
+                 cargarNicks(chat);
+            } 
+            
+            
+            
+            
+            
+            
+           
+           //      chatClientForm.getjTextAreaSala().setText(dis.readUTF() + "\n");
 
             }
             // Una vez finalizado cierro los flujos de entrada/salida y el socket "s"
              
             
-            dos.writeUTF("exit");
-            dos.close();
-            dis.close();
+          
+            oos.close();
+            ois.close();
             s.close();
             
             
@@ -129,6 +156,8 @@ public class ClienteController implements Runnable {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(ClienteController.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
@@ -172,4 +201,33 @@ public class ClienteController implements Runnable {
 
     }
 
+    // método para cargar la lista de usuarios 
+    
+    private void cargarNicks(Chat chat)
+    {
+    
+               
+        // Obtenenemos el TreeMap de chat
+        TreeMap<Usuario, String> chats = chat.getChat();
+        
+        // Crear un modelo para el JList
+        DefaultListModel<String> listaNicks = new DefaultListModel<>();
+        
+        // Recorremos el TreeMap y agregamos los valores al modelo
+        for (Entry<Usuario, String> entry : chats.entrySet()) {
+            Usuario usuario = entry.getKey();
+           
+            String nick = usuario.getNick();
+            listaNicks.addElement(nick);
+        }
+        
+        // Crear el JList con el modelo
+        JList<String> jlist = new JList<>(listaNicks);
+        
+        chatClientForm.getjListUsuarios().setModel(listaNicks);
+        
+        
+    
+    }    
+    
 }

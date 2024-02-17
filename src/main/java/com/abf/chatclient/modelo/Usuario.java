@@ -3,12 +3,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.abf.chatclient.modelo;
-
+import java.io.Serializable;
 /**
- * Clase usuario que puede usar el chat
+ * Clase usuario que puede usar el chat, la hacemos comparable
+ * para que sea clave de las listas y diferenciarse por el nick
  * @author Alber
  */
-public class Usuario {
+public class Usuario implements Comparable<Usuario>,Serializable {
     
     String nick;
     String ip;
@@ -28,6 +29,10 @@ public class Usuario {
     this.puerto = puerto;
     }
     
+     @Override
+    public int compareTo(Usuario otroUsuario) {
+        return this.nick.compareTo(otroUsuario.getNick());
+    }
     
     public String getNick(){
     return this.nick;

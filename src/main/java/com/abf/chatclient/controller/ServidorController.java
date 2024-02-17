@@ -4,6 +4,7 @@
  */
 package com.abf.chatclient.controller;
 
+import com.abf.chatclient.modelo.Chat;
 import com.abf.chatclient.modelo.Servidor;
 import com.abf.chatclient.modelo.Usuario;
 import com.abf.chatclient.modelo.vista.ServerForm;
@@ -14,6 +15,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.io.ObjectOutputStream;
 
 /**
  * Clase controladora del chat de servidor
@@ -21,12 +23,12 @@ import java.util.Map;
  */
 public class ServidorController implements Runnable{
     
-    private Map<String, Usuario> usuarios;
-    private ServerForm serverForm;
+    private Chat chat;
+    private final ServerForm serverForm;
 
     public ServidorController(ServerForm serverForm) {
         this.serverForm = serverForm;
-        this.usuarios = new HashMap<>();
+        this.chat = new Chat();
     }
 
     @Override
@@ -35,7 +37,9 @@ public class ServidorController implements Runnable{
 
         // Crear usuario de la sala principal
         Usuario chatGeneral = new Usuario("CHATGENERAL", "192.168.1.137", 9990);
-        usuarios.put(chatGeneral.getNick(), chatGeneral);
+        
+        chat.getChat().put(chatGeneral, "");
+      
         
         
 
@@ -51,17 +55,27 @@ public class ServidorController implements Runnable{
                 Socket s = ss.accept();
                 serverForm.getjTextAreaChatGeneral().setText("Se ha conectado un cliente " + s.getInetAddress() + " al puerto " + s.getPort()+"\n");
              
-                DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+               // Crear ObjectOutputStream utilizando el OutputStream del socket
+            ObjectOutputStream outputStream = new ObjectOutputStream(s.getOutputStream());
+
+              // Escribir el objeto en el flujo de salida
+            outputStream.writeObject(chat);
+
+            // Realizar un flush para asegurarse de que todos los datos se envíen
+            outputStream.flush();
+
                 DataInputStream dis = new DataInputStream(s.getInputStream());
         
+                
+                /*
                 String datoCliente;
                 while (!(datoCliente = dis.readUTF()).equals("exit")) {
-                     serverForm.getjTextAreaChatGeneral().append("Mensaje recibido del cliente: " + datoCliente+"\n");
-                      dos.writeUTF("Mensaje del servidor: " + " recibido " 
-                      + "\n");
+             //        serverForm.getjTextAreaChatGeneral().append("Mensaje recibido del cliente: " + datoCliente+"\n");
+             //         dos.writeUTF("Mensaje del servidor: " + " recibido " 
+            //          + "\n");
                       
                 }
-           
+           */
         
         }   } catch (IOException e) {
                 e.printStackTrace();

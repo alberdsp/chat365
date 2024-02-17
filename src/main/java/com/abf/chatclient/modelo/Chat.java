@@ -4,27 +4,28 @@
  */
 package com.abf.chatclient.modelo;
 import java.util.TreeMap;
+import java.io.Serializable;
 /**
- * Clase que contiene los chats en la parte del cliente
+ * Clase que contiene los chats, contiene un 
  * @author Alber
  */
-public class Chats {
+public class Chat implements Serializable{
     
-   TreeMap<String, String> chats;
+   TreeMap<Usuario, String> chat;
     
    
    // constructor por defecto
-   public Chats(){
+   public Chat(){
        
-       this.chats = new TreeMap<String, String>();
+       this.chat = new TreeMap<>();
   
    }
    
    
    // getter para devolver el chat.
-   public TreeMap<String, String> getChats(){
+   public TreeMap<Usuario, String> getChat(){
    
-       return this.chats;
+       return this.chat;
    
    }
    
