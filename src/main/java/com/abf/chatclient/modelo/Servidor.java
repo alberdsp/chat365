@@ -25,6 +25,10 @@ public class Servidor {
         this.puerto = puerto;
     
     }
+
+    public Servidor() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
     
     // getters y setters
     public void setIp( String ip){

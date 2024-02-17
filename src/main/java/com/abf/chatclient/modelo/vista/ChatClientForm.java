@@ -30,98 +30,66 @@ public class ChatClientForm extends javax.swing.JFrame {
         return jButtonEnviar;
     }
 
-    public void setjButtonEnviar(JButton jButtonEnviar) {
-        this.jButtonEnviar = jButtonEnviar;
-    }
+
 
     public JList<String> getjListUsuarios() {
         return jListUsuarios;
     }
 
-    public void setjListUsuarios(JList<String> jListUsuarios) {
-        this.jListUsuarios = jListUsuarios;
-    }
+
 
     public JPanel getjPanel1() {
         return jPanel1;
     }
 
-    public void setjPanel1(JPanel jPanel1) {
-        this.jPanel1 = jPanel1;
-    }
+
 
     public JScrollPane getjScrollPane1() {
         return jScrollPane1;
     }
 
-    public void setjScrollPane1(JScrollPane jScrollPane1) {
-        this.jScrollPane1 = jScrollPane1;
-    }
+
 
     public JScrollPane getjScrollPane2() {
         return jScrollPane2;
     }
 
-    public void setjScrollPane2(JScrollPane jScrollPane2) {
-        this.jScrollPane2 = jScrollPane2;
-    }
 
-    public JSeparator getjSeparator1() {
-        return jSeparator1;
-    }
-
-    public void setjSeparator1(JSeparator jSeparator1) {
-        this.jSeparator1 = jSeparator1;
-    }
 
     public JTextArea getjTextAreaSala() {
         return jTextAreaSala;
     }
 
-    public void setjTextAreaSala(JTextArea jTextAreaSala) {
-        this.jTextAreaSala = jTextAreaSala;
-    }
+
 
     public JTextField getjTextFieldIPServidor() {
         return jTextFieldIPServidor;
     }
 
-    public void setjTextFieldIPServidor(JTextField jTextFieldIPServidor) {
-        this.jTextFieldIPServidor = jTextFieldIPServidor;
-    }
+
 
     public JTextField getjTextFieldNick() {
         return jTextFieldNick;
     }
 
-    public void setjTextFieldNick(JTextField jTextFieldNick) {
-        this.jTextFieldNick = jTextFieldNick;
-    }
+
 
     public JTextField getjTextFieldPuerto() {
         return jTextFieldPuerto;
     }
 
-    public void setjTextFieldPuerto(JTextField jTextFieldPuerto) {
-        this.jTextFieldPuerto = jTextFieldPuerto;
-    }
 
     public JTextField getjTextFieldTextoAenviar() {
         return jTextFieldTextoAenviar;
     }
 
-    public void setjTextFieldTextoAenviar(JTextField jTextFieldTextoAenviar) {
-        this.jTextFieldTextoAenviar = jTextFieldTextoAenviar;
-    }
+
 
     public JToggleButton getjToggleButtonConectar() {
         return jToggleButtonConectar;
     }
 
-    public void setjToggleButtonConectar(JToggleButton jToggleButtonConectar) {
-        this.jToggleButtonConectar = jToggleButtonConectar;
-    }
-    
+
     
 
     /**

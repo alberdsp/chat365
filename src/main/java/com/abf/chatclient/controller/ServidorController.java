@@ -34,8 +34,10 @@ public class ServidorController implements Runnable{
         serverForm.setVisible(true);
 
         // Crear usuario de la sala principal
-        Usuario chatGeneral = new Usuario("CHATGENERAL", "192.168.1.10", 9990);
+        Usuario chatGeneral = new Usuario("CHATGENERAL", "192.168.1.137", 9990);
         usuarios.put(chatGeneral.getNick(), chatGeneral);
+        
+        
 
         try {
             
@@ -55,7 +57,8 @@ public class ServidorController implements Runnable{
                 String datoCliente;
                 while (!(datoCliente = dis.readUTF()).equals("exit")) {
                      serverForm.getjTextAreaChatGeneral().append("Mensaje recibido del cliente: " + datoCliente+"\n");
-                      dos.writeUTF("Mensaje del servidor: " + " recibido ");
+                      dos.writeUTF("Mensaje del servidor: " + " recibido " 
+                      + "\n");
                       
                 }
            

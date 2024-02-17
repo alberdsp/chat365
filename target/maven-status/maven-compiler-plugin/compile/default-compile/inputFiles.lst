@@ -1,5 +1,6 @@
 C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatclient\controller\ServidorController.java
 C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatclient\modelo\Usuario.java
+C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatclient\modelo\Mensaje.java
 C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatclient\modelo\vista\ChatClientForm.java
 C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatclient\ClienteChat.java
 C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatclient\modelo\vista\ServerForm.java
@@ -7,3 +8,4 @@ C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatc
 C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatclient\controller\ClienteController.java
 C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatclient\MainClient.java
 C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatclient\MainServer.java
+C:\Users\Alber\Documents\NetBeansProjects\ChatClient\src\main\java\com\abf\chatclient\modelo\Chats.java
