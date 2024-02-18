@@ -3,7 +3,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.abf.chatclient.modelo;
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /**
  * Clase usuario que puede usar el chat, la hacemos comparable
  * para que sea clave de las listas y diferenciarse por el nick
@@ -27,6 +31,10 @@ public class Usuario implements Comparable<Usuario>,Serializable {
     this.nick = nick;
     this.ip = ip;
     this.puerto = puerto;
+    }
+
+    public Usuario() {
+       
     }
     
      @Override
@@ -57,4 +65,45 @@ public class Usuario implements Comparable<Usuario>,Serializable {
     public void setPuerto( int puerto){
     this.puerto = puerto;
     }
+    
+    
+    
+    /**
+     * método que devuelve un socket en base a la ip y puerto del usuario
+     * @return  socket   
+     */
+    public  Socket getSocket() {
+       
+          
+            Socket socketCliente;
+        try {
+            socketCliente = new Socket(this.ip, this.puerto);
+            
+            return socketCliente;
+        } catch (IOException ex) {
+            Logger.getLogger(Usuario.class.getName()).log(Level.SEVERE, null, ex);
+        }
+            
+       
+      
+        return null;
+    }
+
+    
+    /**
+     *  Método que recibe un socket y guarda ip y puerto
+     * @param socket 
+     */
+    public void setSocket(Socket socket){
+        
+        InetAddress addres = socket.getInetAddress();
+        this.ip = addres.getHostAddress();
+        this.puerto = socket.getPort();
+       
+    }
+    
+    
+    
+    
+    
 }

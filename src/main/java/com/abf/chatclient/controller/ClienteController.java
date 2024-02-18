@@ -29,6 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 /**
@@ -51,6 +52,7 @@ public class ClienteController implements Runnable {
     private Boolean conectado = false;
     private Boolean cerrarconexion = false;
     private String mensajetxt = "";
+    private Usuario usuario;
 
     public ClienteController(ChatClientForm chatClientForm) {
 
@@ -75,16 +77,20 @@ public class ClienteController implements Runnable {
             String ipserver = chatClientForm.getjTextFieldIPServidor().getText();
             int puerto = Integer.parseInt(chatClientForm.getjTextFieldPuerto().getText());
             servidor = new Servidor(ipserver, puerto);
-
+            
             // Lanzo el socket del cliente para conectar al "localhost" servidor por el puerto 7040
             Socket s = new Socket(servidor.getIp(), servidor.getPuerto());
+            usuario = new Usuario();
+            
             // Muestro el mensaje de conexi�n
             chatClientForm.getjTextAreaSala().setText("Conectado al servidor por el puerto " + s.getPort() + "\n");
             // Inicializo los flujos de entrada/salida a trav�s del Socket "s"
             // Crear un ObjectInputStream utilizando el InputStream del socket cliente
             ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
             ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
-
+            String nick = chatClientForm.getjTextFieldNick().getText();
+            usuario.setNick(nick);
+            oos.writeObject(usuario);
 
             DataInputStream dis = new DataInputStream(s.getInputStream());
             jToggleConectar.setText("ON");
@@ -208,7 +214,7 @@ public class ClienteController implements Runnable {
     
                
         // Obtenenemos el TreeMap de chat
-        TreeMap<Usuario, String> chats = chat.getChat();
+        LinkedHashMap<Usuario, String> chats = chat.getChat();
         
         // Crear un modelo para el JList
         DefaultListModel<String> listaNicks = new DefaultListModel<>();
@@ -219,6 +225,7 @@ public class ClienteController implements Runnable {
            
             String nick = usuario.getNick();
             listaNicks.addElement(nick);
+            
         }
         
         // Crear el JList con el modelo
