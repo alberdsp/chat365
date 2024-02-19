@@ -5,6 +5,7 @@
 package com.abf.chatclient.controller;
 
 import com.abf.chatclient.modelo.Chat;
+import com.abf.chatclient.modelo.ClienteHandler;
 import com.abf.chatclient.modelo.Mensaje;
 
 import com.abf.chatclient.modelo.Usuario;
@@ -31,81 +32,46 @@ public class ServidorController implements Runnable {
 
     private Chat chat;
     private final ServerForm serverForm;
+    private int puerto = 9990 ;
 
     public ServidorController(ServerForm serverForm) {
         this.serverForm = serverForm;
         this.chat = new Chat();
     }
 
-    @Override
+  @Override
     public void run() {
         serverForm.setVisible(true);
-
-        // Crear usuario de la sala principal
-        Usuario chatGeneral = new Usuario("CHATGENERAL", "192.168.1.137", 9990);
-        //lo añadimos al la sala
-        chat.getChat().put(chatGeneral, "");
+        ServerSocket serverSocket = null;
 
         try {
-             
-             // creamos el socket servidor
-            ServerSocket ss = new ServerSocket(9990);
-            serverForm.getjTextAreaChatGeneral().setText("Servidor "
-                    + ss.getInetAddress() + " escuchando en el puerto "
-                    + ss.getLocalPort() + "\n");
-            
-            // habilitamos la escucha
-            Socket s = ss.accept();
-            ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
-            ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
-            // notificamos la conexión de un cliente
-            serverForm.getjTextAreaChatGeneral().append("Se ha conectado un cliente " + s.getInetAddress() + " al puerto " + s.getPort() + "\n");
-                
-            // enviamos al cliente la sala de chat con los usuarios.
-                oos.writeObject(chat);
+            // Crear el socket servidor en el puerto especificado
+            serverSocket = new ServerSocket(9990);
+            serverForm.getjTextAreaChatGeneral().setText("Servidor escuchando en el puerto " + puerto + "\n");
 
-            // Realizamos un flush para aseguranos de que todos los datos se envíen
-                oos.flush();
-                
-                // nos quedamos a la escucha
             while (true) {
+                // Aceptar una nueva conexión
+                Socket socket = serverSocket.accept();
+                serverForm.getjTextAreaChatGeneral().append("Se ha conectado un cliente " + socket.getInetAddress() + " al puerto " + socket.getPort() + "\n");
 
-           
-
-                Object objetoRecibido = null;
-                try {
-                    objetoRecibido = ois.readObject();
-
-                    // Procesar el objeto recibido
-                    if (objetoRecibido instanceof Mensaje) {
-                        Mensaje mensaje  =  ((Mensaje) objetoRecibido);
-                        String mensajetxt = mensaje.getMensaje();
-                        serverForm.getjTextAreaChatGeneral().append(mensaje.getOrigen().getNick()
-                                + " : " + mensajetxt + "\n");
-                    } else if // Procesar el objeto recibido
-                            (objetoRecibido instanceof Usuario) {
-                        Usuario usuario = (Usuario) objetoRecibido;
-
-                        usuario.setSocket(s);
-
-                        this.chat.getChat().put(usuario, "");
-                        oos.writeObject(chat);
-
-                    }
-
-                } catch (ClassNotFoundException ex) {
-                    Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-            
+                // Crear un nuevo hilo para manejar la conexión
+                Thread thread = new Thread(new ClienteHandler(socket, chat, serverForm));
+                thread.start();
             }
         } catch (IOException e) {
             e.printStackTrace();
-
-            System.out.print(e);
+        } finally {
+            try {
+                if (serverSocket != null) {
+                    serverSocket.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-
     }
+
+
 
     private void actualizarUsuarios() {
 

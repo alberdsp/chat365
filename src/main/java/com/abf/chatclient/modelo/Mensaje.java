@@ -14,9 +14,12 @@ import java.io.Serializable;
  * @author Alber
  */
 public class Mensaje implements Serializable {
-    Usuario origen;
-    Usuario destino;
-    String mensaje;
+    
+
+
+    private Usuario origen;
+    private Usuario destino;
+    private String mensaje;
     
     
     /**
