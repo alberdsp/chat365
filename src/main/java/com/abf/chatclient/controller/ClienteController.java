@@ -53,6 +53,7 @@ public class ClienteController implements Runnable {
     private Boolean cerrarconexion = false;
     private String mensajetxt = "";
     private Usuario usuario;
+    private Usuario destino;
 
     public ClienteController(ChatClientForm chatClientForm) {
 
@@ -81,9 +82,9 @@ public class ClienteController implements Runnable {
             // Lanzo el socket del cliente para conectar al "localhost" servidor por el puerto 7040
             Socket s = new Socket(servidor.getIp(), servidor.getPuerto());
             usuario = new Usuario();
-            
+            destino = new Usuario("CHATGENERAL",servidor.getIp(),servidor.getPuerto());
             // Muestro el mensaje de conexi�n
-            chatClientForm.getjTextAreaSala().setText("Conectado al servidor por el puerto " + s.getPort() + "\n");
+            chatClientForm.getjTextAreaSala().append("Conectado al servidor por el puerto " + s.getPort() + "\n");
             // Inicializo los flujos de entrada/salida a trav�s del Socket "s"
             // Crear un ObjectInputStream utilizando el InputStream del socket cliente
             ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
@@ -92,7 +93,7 @@ public class ClienteController implements Runnable {
             usuario.setNick(nick);
             oos.writeObject(usuario);
 
-            DataInputStream dis = new DataInputStream(s.getInputStream());
+           
             jToggleConectar.setText("ON");
 
             // Mientras que el cliente no mande el mensaje "exit" sigue pidiendo datos.
@@ -104,11 +105,17 @@ public class ClienteController implements Runnable {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
+                        
+                        Mensaje mensajenv = new Mensaje();
+                        mensajenv.setDestino(destino);
+                        mensajenv.setOrigen(usuario);
                         mensajetxt = chatClientForm.getjTextFieldTextoAenviar().getText();
-                        mensaje.setMensaje(mensajetxt);
-                        oos.writeObject(mensaje);
+                        mensajenv.setMensaje(mensajetxt);
+                        oos.writeObject(mensajenv);
+                        chatClientForm.getjTextAreaSala().append("yo :" +  mensajetxt + "\n");
                         mensajetxt = "";
                         chatClientForm.getjTextFieldTextoAenviar().setText("");
+                     
                     } catch (IOException ex) {
                         Logger.getLogger(ClienteController.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -125,7 +132,7 @@ public class ClienteController implements Runnable {
             // Procesar el objeto recibido
             if (objetoRecibido instanceof Mensaje) {
                 String mensajeRecibido = ((Mensaje) objetoRecibido).getMensaje();
-                chatClientForm.getjTextAreaSala().setText("Mensaje recibido del cliente: " + mensajeRecibido+"\n");
+                chatClientForm.getjTextAreaSala().append("Mensaje recibido del cliente: " + mensajeRecibido+"\n");
             } else if
             
                   // Procesar el objeto recibido

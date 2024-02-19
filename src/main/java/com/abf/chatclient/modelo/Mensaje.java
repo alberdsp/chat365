@@ -33,6 +33,12 @@ public class Mensaje implements Serializable {
     
     }
     
+    // constructor por defecto
+    public Mensaje(){
+    
+    
+    }
+    
     
     // getters y setters
     public Usuario getOrigen(){
