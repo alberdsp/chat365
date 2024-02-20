@@ -106,6 +106,11 @@ public class ServidorController implements Runnable {
                                 });
 
                                 enviarMensajes.start();
+                                try {
+                                    enviarMensajes.join();  // Espera a que el hilo enviarMensajes termine
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt(); // Restablece el estado de interrupción
+                                }
 
                             } // Procesamiento de otros tipos de objetos como Usuario, etc.
                             else if (objetoRecibido instanceof Usuario) {
@@ -119,7 +124,8 @@ public class ServidorController implements Runnable {
 
                                 this.chat.getChat().put(usuario, "");
                                 // servidorcontroller.getChat().chat.put(usuario, "entra");
-
+                                
+                              
                                 oos.writeObject(chat);
                                 oos.flush();
 
@@ -188,7 +194,8 @@ public class ServidorController implements Runnable {
         for (Usuario usuario : usuariosChat.keySet()) {
             // Verificar que no enviamos al mismo origen o a la "SALA_CHAT"
             //    if (!usuario.getNick().equals("SALA_CHAT") && !mensaje.getOrigen().equals(usuario)) {
-            if (!usuario.getNick().equals("SALA_CHAT")) {
+
+            if (!usuario.getNick().equals("SALA_CHAT") && !mensaje.getOrigen().getNick().equals(usuario.getNick())) {
                 Socket socket = null;
                 ObjectOutputStream oos = null;
 

@@ -148,6 +148,8 @@ public class ClienteController implements Runnable {
 
     // método para cargar la lista de usuarios 
     private void cargarNicks(Chat chat) {
+        
+        
 
         // Obtenenemos el TreeMap de chat
         LinkedHashMap<Usuario, String> chats = chat.getChat();
@@ -157,10 +159,21 @@ public class ClienteController implements Runnable {
 
         // Recorremos el TreeMap y agregamos los valores al modelo
         for (Entry<Usuario, String> entry : chats.entrySet()) {
-            Usuario usuario = entry.getKey();
+          
+            Usuario usuariobusc = entry.getKey();
 
-            String nick = usuario.getNick();
+            String nick = usuariobusc.getNick();
             listaNicks.addElement(nick);
+            
+            // cuando repasemos por el nick recogemos el puerto asignado
+            if (nick.equals(usuario.getNick())){
+            
+              usuario.setPuerto(usuariobusc.getPuerto());
+            
+                
+            }
+            
+            
 
         }
 
@@ -242,7 +255,7 @@ public class ClienteController implements Runnable {
 
         try {
             // Creamos el servidor que escucha siempre en el puerto especificado
-            serverSocket = new ServerSocket(9000);
+            serverSocket = new ServerSocket(usuario.getPuerto());
            
 
             while (true) {
