@@ -27,7 +27,6 @@ public class Servidor {
     }
 
     public Servidor() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
     
     // getters y setters

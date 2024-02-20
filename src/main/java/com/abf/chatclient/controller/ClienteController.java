@@ -59,6 +59,7 @@ public class ClienteController implements Runnable {
 
         this.chatClientForm = chatClientForm;
         this.chat = new Chat();
+        this.servidor = new Servidor();
 
     }
 
@@ -69,109 +70,19 @@ public class ClienteController implements Runnable {
 
     }
 
-    private void iniciarChat()  {
+    private void iniciarChat() {
+         
+        String ip =  chatClientForm.getjTextFieldIPServidor().getText();
+        int puerto = Integer.parseInt(chatClientForm.getjTextFieldPuerto().getText());
+        servidor.setIp(ip);
+        servidor.setPuerto(puerto);
+        usuario = new Usuario();
+        destino = new Usuario("CHATGENERAL", servidor.getIp(), servidor.getPuerto(), true);
+        String nick = chatClientForm.getjTextFieldNick().getText();
+        usuario.setNick(nick);
+        enviar(usuario);
 
-        try {
-
-            // Mediante el OutputStream mando el mensaje escrito al servidor
-            //	dos.writeUTF(dato_cliente);
-            String ipserver = chatClientForm.getjTextFieldIPServidor().getText();
-            int puerto = Integer.parseInt(chatClientForm.getjTextFieldPuerto().getText());
-            servidor = new Servidor(ipserver, puerto);
-            
-            // Lanzo el socket del cliente para conectar al "localhost" servidor por el puerto 7040
-            Socket s = new Socket(servidor.getIp(), servidor.getPuerto());
-            usuario = new Usuario();
-            destino = new Usuario("CHATGENERAL",servidor.getIp(),servidor.getPuerto());
-            // Muestro el mensaje de conexi�n
-            chatClientForm.getjTextAreaSala().append("Conectado al servidor por el puerto " + s.getPort() + "\n");
-            // Inicializo los flujos de entrada/salida a trav�s del Socket "s"
-            // Crear un ObjectInputStream utilizando el InputStream del socket cliente
-            ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
-            ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
-            String nick = chatClientForm.getjTextFieldNick().getText();
-            usuario.setNick(nick);
-            oos.writeObject(usuario);
-
-           
-            jToggleConectar.setText("ON");
-
-            // Mientras que el cliente no mande el mensaje "exit" sigue pidiendo datos.
-            // Pido al cliente que escriba un mensaje
-            //chatClientForm.getjTextAreaSala().setText("Escriba mensaje > ");
-            //   Método listener al hacer clic
-            jButtonEnviar.addActionListener(new ActionListener() {
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        
-                        Mensaje mensajenv = new Mensaje();
-                        mensajenv.setDestino(destino);
-                        mensajenv.setOrigen(usuario);
-                        mensajetxt = chatClientForm.getjTextFieldTextoAenviar().getText();
-                        mensajenv.setMensaje(mensajetxt);
-                        oos.writeObject(mensajenv);
-                        chatClientForm.getjTextAreaSala().append("yo :" +  mensajetxt + "\n");
-                        mensajetxt = "";
-                        chatClientForm.getjTextFieldTextoAenviar().setText("");
-                     
-                    } catch (IOException ex) {
-                        Logger.getLogger(ClienteController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                }
-            });
-
-          
-            while (conectado) {
-            // Leer el objeto enviado por el cliente
-            Object objetoRecibido = ois.readObject();
-
-           
-            // Procesar el objeto recibido
-            if (objetoRecibido instanceof Mensaje) {
-                String mensajeRecibido = ((Mensaje) objetoRecibido).getMensaje();
-                chatClientForm.getjTextAreaSala().append("Mensaje recibido del cliente: " + mensajeRecibido+"\n");
-            } else if
-            
-                  // Procesar el objeto recibido
-                (objetoRecibido instanceof Chat) {
-                 this.chat = (Chat) objetoRecibido;
-                 cargarNicks(chat);
-            } 
-            
-            
-            
-            
-            
-            
-           
-           //      chatClientForm.getjTextAreaSala().setText(dis.readUTF() + "\n");
-
-            }
-            // Una vez finalizado cierro los flujos de entrada/salida y el socket "s"
-             
-            
-          
-            oos.close();
-            ois.close();
-            s.close();
-            
-            
-
-
-            jToggleConectar.setText("OFF");
-            
-            cerrarconexion = true;
-
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(ClienteController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        jToggleConectar.setText("ON");
 
     }
 
@@ -188,60 +99,139 @@ public class ClienteController implements Runnable {
         chatClientForm.getjTextFieldPuerto().setText("9990");
 
         jToggleConectar = chatClientForm.getjToggleButtonConectar();
+        
+        // listener de enviar mensajes
 
-        // detectamos si pulsamos a conectar el chat o no
+        jButtonEnviar.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                // Construye el mensaje a enviar
+                Mensaje mensajenv = new Mensaje();
+                mensajenv.setDestino(destino);
+                mensajenv.setOrigen(usuario);
+                mensajetxt = chatClientForm.getjTextFieldTextoAenviar().getText();
+                mensajenv.setMensaje(mensajetxt);
+
+                // Envía el mensaje
+                enviar(mensajenv);
+                chatClientForm.getjTextAreaSala().append("yo: " + mensajetxt + "\n");
+
+                // Limpia el campo de texto
+                chatClientForm.getjTextFieldTextoAenviar().setText("");
+
+            }
+
+        });
+
+        // detectamos si pulsamos a conectar el chat on o off
         jToggleConectar.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
                 conectado = e.getStateChange() == ItemEvent.SELECTED;
-                if(conectado){
-                cerrarconexion=false;
+                if (conectado) {
+                    cerrarconexion = false;
                 }
-                // cargamos en un hilo el chat
-                Thread hiloChat = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        while (!cerrarconexion) {
+             
+                        if (!cerrarconexion) {
                             iniciarChat();
                         }
                     }
                 });
-                hiloChat.start();
+           
 
-          
-            }
-        });
+            
+        
 
     }
 
     // método para cargar la lista de usuarios 
-    
-    private void cargarNicks(Chat chat)
-    {
-    
-               
+    private void cargarNicks(Chat chat) {
+
         // Obtenenemos el TreeMap de chat
         LinkedHashMap<Usuario, String> chats = chat.getChat();
-        
+
         // Crear un modelo para el JList
         DefaultListModel<String> listaNicks = new DefaultListModel<>();
-        
+
         // Recorremos el TreeMap y agregamos los valores al modelo
         for (Entry<Usuario, String> entry : chats.entrySet()) {
             Usuario usuario = entry.getKey();
-           
+
             String nick = usuario.getNick();
             listaNicks.addElement(nick);
-            
+
         }
-        
+
         // Crear el JList con el modelo
         JList<String> jlist = new JList<>(listaNicks);
-        
+
         chatClientForm.getjListUsuarios().setModel(listaNicks);
-        
-        
+
+    }
+
+    public void enviar(Object objeto) {
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
+        Socket socket = null;
+
+        try {
+            // Establecer la conexión con el servidor
+            socket = new Socket(servidor.getIp(), servidor.getPuerto());
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            ois = new ObjectInputStream(socket.getInputStream());
+
+            // Envía el objeto (Mensaje o Usuario)
+            oos.writeObject(objeto);
+
+            // Imprime un mensaje en la consola/UI para confirmar el envío
+            if (objeto instanceof Mensaje) {
+                System.out.println("Mensaje enviado: " + ((Mensaje) objeto).getMensaje());
+                // Actualiza la UI si es necesario, por ejemplo, mostrar el mensaje en el área de texto
+            } else if (objeto instanceof Usuario) {
+                System.out.println("Usuario enviado: " + ((Usuario) objeto).getNick());
+                // Realizar acciones adicionales si es necesario
+                try {
+                    Object objetoRecibido = ois.readObject();
+                     if (objetoRecibido instanceof Chat) {
+                             
+                             Chat newchat = new Chat();
+                              newchat = (Chat) objetoRecibido;
+                              cargarNicks(newchat);
+                             
+                             }
+                    
+                    
+                } catch (ClassNotFoundException ex) {
+                    Logger.getLogger(ClienteController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+             
+                
+            }
+
+        } catch (IOException ex) {
+            Logger.getLogger(ClienteController.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                // Cierra los recursos
+                if (oos != null) {
+                    oos.close();
+                }
+                if (ois != null) {
+                    ois.close();
+                }
+                if (socket != null) {
+                    socket.close();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ClienteController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
     
-    }    
     
+    
+    
+
 }

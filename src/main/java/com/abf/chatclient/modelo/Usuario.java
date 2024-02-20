@@ -15,9 +15,12 @@ import java.util.logging.Logger;
  */
 public class Usuario implements Comparable<Usuario>,Serializable {
     
+    private static final long serialVersionUID = 1L;
+    
     String nick;
     String ip;
     int puerto;
+    Boolean online;
     
     
     /**
@@ -27,10 +30,12 @@ public class Usuario implements Comparable<Usuario>,Serializable {
      * @param puerto  puerto del usuario
      */
     
-    public Usuario ( String nick, String ip, int puerto) {
+    public Usuario ( String nick, String ip, int puerto, Boolean online) {
     this.nick = nick;
     this.ip = ip;
     this.puerto = puerto;
+    this.online = online;
+    
     }
 
     public Usuario() {
@@ -64,6 +69,14 @@ public class Usuario implements Comparable<Usuario>,Serializable {
     
     public void setPuerto( int puerto){
     this.puerto = puerto;
+    }
+
+    public Boolean getOnline() {
+        return online;
+    }
+
+    public void setOnline(Boolean online) {
+        this.online = online;
     }
     
     

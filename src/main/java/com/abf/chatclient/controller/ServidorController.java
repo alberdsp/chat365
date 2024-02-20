@@ -18,6 +18,7 @@ import java.net.Socket;
 
 import java.util.Map;
 import java.io.ObjectOutputStream;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,31 +33,41 @@ public class ServidorController implements Runnable {
 
     private Chat chat;
     private final ServerForm serverForm;
-    private int puerto = 9990 ;
+    private int puerto = 9990;
+    // mapa que contrendrá los hilos abiertos.
+    private Map<String, ClienteHandler> clienteHandlersPorNick;
 
     public ServidorController(ServerForm serverForm) {
         this.serverForm = serverForm;
         this.chat = new Chat();
+        this.clienteHandlersPorNick = new HashMap<>();
+        Usuario sala = new Usuario("SALA", "192.168.1.137", 9990, true);
+        chat.getChat().put(sala, "");
     }
-
-  @Override
+    
+   
+    @Override
     public void run() {
         serverForm.setVisible(true);
         ServerSocket serverSocket = null;
 
         try {
-            // Crear el socket servidor en el puerto especificado
+            // Creamos el servidor que escucha siempre en el puerto especificado
             serverSocket = new ServerSocket(9990);
             serverForm.getjTextAreaChatGeneral().setText("Servidor escuchando en el puerto " + puerto + "\n");
 
             while (true) {
                 // Aceptar una nueva conexión
                 Socket socket = serverSocket.accept();
-                serverForm.getjTextAreaChatGeneral().append("Se ha conectado un cliente " + socket.getInetAddress() + " al puerto " + socket.getPort() + "\n");
 
                 // Crear un nuevo hilo para manejar la conexión
-                Thread thread = new Thread(new ClienteHandler(socket, chat, serverForm));
+                ClienteHandler clienteHandler = new ClienteHandler(socket, chat, serverForm, clienteHandlersPorNick, this);
+                Thread thread = new Thread(clienteHandler);
                 thread.start();
+
+                // Llamar al método para enviar la lista de usuarios a todos los clientes
+            //    enviarListaUsuarios();
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -71,7 +82,51 @@ public class ServidorController implements Runnable {
         }
     }
 
+    // método para enviar a todos los hilos la lista nueva de usuarios
+    public void enviarListaUsuarios() {
+        for (ClienteHandler handler : clienteHandlersPorNick.values()) {
 
+            try {
+                 Socket s = handler.getSocket();
+            ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
+            oos.reset();    
+            oos.writeObject(this.chat);
+            oos.flush();
+            /*    
+            Mensaje nmen = new Mensaje();
+            
+            
+            nmen.setOrigen(null);
+            nmen.setDestino(null);
+            nmen.setMensaje(" Hola a todos, soy nuevo");
+            oos.writeObject(nmen);
+            */
+                 
+            } catch (IOException ex) {
+                Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+    }
+
+    public Chat getChat() {
+        return chat;
+    }
+
+    public void setChat(Chat chat) {
+        this.chat = chat;
+    }
+    
+    
+    
+    
+    
+    
+}
+
+
+        /*
 
     private void actualizarUsuarios() {
 
@@ -101,5 +156,5 @@ public class ServidorController implements Runnable {
         }
 
     }
-
-}
+         */
+    
