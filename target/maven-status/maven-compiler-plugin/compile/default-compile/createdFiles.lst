@@ -10,6 +10,7 @@ com\abf\chatclient\modelo\vista\ClientForm.class
 com\abf\chatclient\ClienteChat.class
 com\abf\chatclient\controller\ServidorController$1.class
 com\abf\chatclient\controller\ClienteController$3.class
+com\abf\chatclient\controller\ServidorController$2.class
 com\abf\chatclient\modelo\Mensaje.class
 com\abf\chatclient\MainServer.class
 com\abf\chatclient\modelo\Servidor.class

@@ -124,10 +124,32 @@ public class ServidorController implements Runnable {
 
                                 this.chat.getChat().put(usuario, "");
                                 // servidorcontroller.getChat().chat.put(usuario, "entra");
+
+                                 oos.writeObject(chat);
+                                 oos.flush();
                                 
-                              
-                                oos.writeObject(chat);
-                                oos.flush();
+                                try {
+                                    Thread.sleep(05);
+                                } catch (InterruptedException ex) {
+                                    Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                  
+                                  
+                                  
+                                        Thread enviarUsuarios = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        enviarListaUsuarios();
+                                    }
+                                });
+
+                                enviarUsuarios .start();
+                                try {
+                                    enviarUsuarios.join();  // Espera a que el hilo enviarMensajes termine
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt(); // Restablece el estado de interrupción
+                                }
+                                
 
                                 //  servidorcontroller.enviarListaUsuarios();
                             }
@@ -165,25 +187,51 @@ public class ServidorController implements Runnable {
         // Asumiendo que chat.getChat() devuelve un mapa con Usuario como clave
         LinkedHashMap<Usuario, String> usuariosChat = chat.getChat();
 
-        // Preparar el objeto o mensaje a enviar. Si es solo una lista de usuarios,
-        // necesitarás crear este objeto basado en los usuarios en usuariosChat.
-        // Por simplicidad, aquí asumiré que simplemente reenvías el chat actualizado.
-        Object objetoAEnviar = this.chat; // O cualquier objeto que represente la lista de usuarios.
+      for (Usuario usuario : usuariosChat.keySet()) {
+            // Verificar que no enviamos al mismo origen o a la "SALA_CHAT"
+            //    if (!usuario.getNick().equals("SALA_CHAT") && !mensaje.getOrigen().equals(usuario)) {
 
-        for (Usuario usuario : usuariosChat.keySet()) {
-            Socket socket = usuario.getSocket();
-            if (socket != null && socket.isConnected()) {
+            if (!usuario.getNick().equals("SALA_CHAT")) {
+                Socket socket = null;
+                ObjectOutputStream oos = null;
+
                 try {
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                    oos.reset(); // Asegura que el objeto se envíe incluso si no ha cambiado.
-                    oos.writeObject(objetoAEnviar);
+                    // Establecer una nueva conexión con cada usuario
+                    socket = new Socket(usuario.getIp(), usuario.getPuerto());
+                    oos = new ObjectOutputStream(socket.getOutputStream());
+
+                    // Enviar el mensaje
+                    oos.writeObject(chat);
                     oos.flush();
+
+                    try {
+                        // interrumpo el hilo 5 milisegundos 
+                        // para que de tiempo a recibir bien el paquete.
+                        // de este modo funciona perfectamente
+                        Thread.sleep(05);
+                    } catch (InterruptedException e) {
+                        // El hilo ha sido interrumpido durante el sueño
+                        Thread.currentThread().interrupt(); // Restablece el estado de interrupción
+                        System.err.println("Interrupción durante la pausa: " + e.getMessage());
+                    }
                 } catch (IOException e) {
-                    Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, e);
-                    // Considera manejar adecuadamente la desconexión de un usuario aquí.
+                    Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, "Error al enviar mensaje a " + usuario.getNick(), e);
+                    // Manejo de errores, como intentos de reconexión o eliminación de usuario inactivo
+                } finally {
+                    // Cerrar los recursos
+                    try {
+                        if (oos != null) {
+                            oos.close();
+                        }
+                        if (socket != null && !socket.isClosed()) {
+                            socket.close();
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, "Error al cerrar la conexión con " + usuario.getNick(), ex);
+                    }
                 }
             }
-        }
+    }
     }
 
     // método para enviar a todos los usuarios del chat
@@ -207,6 +255,17 @@ public class ServidorController implements Runnable {
                     // Enviar el mensaje
                     oos.writeObject(mensaje);
                     oos.flush();
+
+                    try {
+                        // interrumpo el hilo 5 milisegundos 
+                        // para que de tiempo a recibir bien el paquete.
+                        // de este modo funciona perfectamente
+                        Thread.sleep(05);
+                    } catch (InterruptedException e) {
+                        // El hilo ha sido interrumpido durante el sueño
+                        Thread.currentThread().interrupt(); // Restablece el estado de interrupción
+                        System.err.println("Interrupción durante la pausa: " + e.getMessage());
+                    }
                 } catch (IOException e) {
                     Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, "Error al enviar mensaje a " + usuario.getNick(), e);
                     // Manejo de errores, como intentos de reconexión o eliminación de usuario inactivo
