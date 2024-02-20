@@ -8,7 +8,7 @@ import com.abf.chatclient.modelo.Chat;
 import com.abf.chatclient.modelo.Mensaje;
 import com.abf.chatclient.modelo.Servidor;
 import com.abf.chatclient.modelo.Usuario;
-import com.abf.chatclient.modelo.vista.ChatClientForm;
+import com.abf.chatclient.modelo.vista.ClientForm;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -25,6 +25,7 @@ import java.awt.AWTEvent.*;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
+import java.io.EOFException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.ObjectInputStream;
@@ -41,7 +42,7 @@ public class ClienteController implements Runnable {
 
     private Chat chatcliente;
 
-    private ChatClientForm chatClientForm;
+    private ClientForm clientForm;
     private Servidor servidor;
     private Mensaje mensaje;
     private JButton jButtonEnviar;
@@ -56,9 +57,9 @@ public class ClienteController implements Runnable {
     private Usuario usuario;
     private Usuario destino;
 
-    public ClienteController(ChatClientForm chatClientForm) {
+    public ClienteController(ClientForm chatClientForm) {
 
-        this.chatClientForm = chatClientForm;
+        this.clientForm = chatClientForm;
         this.chatcliente = new Chat();
         this.servidor = new Servidor();
 
@@ -73,33 +74,36 @@ public class ClienteController implements Runnable {
 
     private void iniciarChat() {
 
-        String ip = chatClientForm.getjTextFieldIPServidor().getText();
-        int puerto = Integer.parseInt(chatClientForm.getjTextFieldPuerto().getText());
+        String ip = clientForm.getjTextFieldIPServidor().getText();
+        int puerto = Integer.parseInt(clientForm.getjTextFieldPuerto().getText());
         servidor.setIp(ip);
         servidor.setPuerto(puerto);
         usuario = new Usuario();
         destino = new Usuario("CHATGENERAL", servidor.getIp(), servidor.getPuerto(), true);
-        String nick = chatClientForm.getjTextFieldNick().getText();
+        String nick = clientForm.getjTextFieldNick().getText();
         usuario.setNick(nick);
         enviar(usuario);
 
         jToggleConectar.setText("ON");
+        
+        // iniciamos la escucha
+        servidorEscucha();
 
     }
 
     private void initComponents() {
 
-        jButtonEnviar = chatClientForm.getjButtonEnviar();
-        jTextAreaChat = chatClientForm.getjTextAreaSala();
-        jListUsuarios = chatClientForm.getjListUsuarios();
-        jTextEnviar = chatClientForm.getjTextFieldTextoAenviar();
-        jToggleConectar = chatClientForm.getjToggleButtonConectar();
+        jButtonEnviar = clientForm.getjButtonEnviar();
+        jTextAreaChat = clientForm.getjTextAreaSala();
+        jListUsuarios = clientForm.getjListUsuarios();
+        jTextEnviar = clientForm.getjTextFieldTextoAenviar();
+        jToggleConectar = clientForm.getjToggleButtonConectar();
 
-        chatClientForm.setVisible(true);
-        chatClientForm.getjTextFieldIPServidor().setText("192.168.100.134");
-        chatClientForm.getjTextFieldPuerto().setText("9990");
+        clientForm.setVisible(true);
+        clientForm.getjTextFieldIPServidor().setText("192.168.100.134");
+        clientForm.getjTextFieldPuerto().setText("9990");
 
-        jToggleConectar = chatClientForm.getjToggleButtonConectar();
+        jToggleConectar = clientForm.getjToggleButtonConectar();
 
         // listener de enviar mensajes
         jButtonEnviar.addActionListener(new ActionListener() {
@@ -111,15 +115,15 @@ public class ClienteController implements Runnable {
                 Mensaje mensajenv = new Mensaje();
                 mensajenv.setDestino(destino);
                 mensajenv.setOrigen(usuario);
-                mensajetxt = chatClientForm.getjTextFieldTextoAenviar().getText();
+                mensajetxt = clientForm.getjTextFieldTextoAenviar().getText();
                 mensajenv.setMensaje(mensajetxt);
 
                 // Envía el mensaje
                 enviar(mensajenv);
-                chatClientForm.getjTextAreaSala().append("yo: " + mensajetxt + "\n");
+                clientForm.getjTextAreaSala().append("yo: " + mensajetxt + "\n");
 
                 // Limpia el campo de texto
-                chatClientForm.getjTextFieldTextoAenviar().setText("");
+                clientForm.getjTextFieldTextoAenviar().setText("");
 
             }
 
@@ -163,7 +167,7 @@ public class ClienteController implements Runnable {
         // Crear el JList con el modelo
         JList<String> jlist = new JList<>(listaNicks);
 
-        chatClientForm.getjListUsuarios().setModel(listaNicks);
+        clientForm.getjListUsuarios().setModel(listaNicks);
 
     }
 
@@ -234,56 +238,107 @@ public class ClienteController implements Runnable {
         hiloEscucha = new Thread(new Runnable() {
             @Override
             public void run() {
+                    ServerSocket serverSocket = null;
+
+        try {
+            // Creamos el servidor que escucha siempre en el puerto especificado
+            serverSocket = new ServerSocket(9000);
+           
+
+            while (true) {
+                // Aceptar una nueva conexión
+                Socket socket = serverSocket.accept();
+
+                // Declaración de los recursos fuera del try para poder cerrarlos en el finally
+                ObjectOutputStream oos = null;
+                ObjectInputStream ois = null;
+
                 try {
-                    ServerSocket ssocket = new ServerSocket(9000);
-                    Socket socket = ssocket.accept();
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                    // Instanciación de los streams. Es importante primero instanciar y abrir el ObjectOutputStream
+                    // para evitar bloqueos en la instanciación del ObjectInputStream en el otro extremo de la conexión.
+                    oos = new ObjectOutputStream(socket.getOutputStream());
+                    oos.flush(); // Asegúrate de vaciar el buffer tras la creación para evitar bloqueos en el otro extremo.
+                    ois = new ObjectInputStream(socket.getInputStream());
 
-                    // Escuchamos los mensajes entrantes del servidor
-                    while (!cerrarconexion) {
+                    // Bucle principal del hilo para leer objetos enviados al servidor
+                    while (true) {
 
+                        Object objetoRecibido;
                         try {
+                            objetoRecibido = ois.readObject();
 
-                            Object objeto = ois.readObject();
+                            // Verificar si el objeto recibido es un Mensaje
+                            if (objetoRecibido instanceof Mensaje) {
+                                Mensaje mensaje = (Mensaje) objetoRecibido;
+                                String mensajetxt = mensaje.getMensaje();
 
-                            // si recibimos mensaje lo lleemos y lo pasamos al chat de destino.
-                            if (objeto instanceof Mensaje) {
+                                // Si el mensaje es "salir", cerrar el socket y salir del método run
+                                if ("salir".equals(mensajetxt)) {
+                                    clientForm.getjTextAreaSala().append(mensaje.getOrigen().getNick() + " ha salido del chat.\n");
 
-                                Usuario remitente = new Usuario();
-                                remitente = ((Mensaje) objeto).getOrigen();
-                                String mensajetxt = ((Mensaje) objeto).getMensaje();
-                                chatClientForm.getjTextAreaSala().append(remitente + " : " + mensajetxt);
+                                    //  chat.put(usuario, "sale");
+                                    break; // Sale del bucle while, lo que lleva al cierre de recursos
+                                }
+                                if ("cerrar".equals(mensajetxt)) {
+                                    clientForm.getjTextAreaSala().append(mensaje.getOrigen().getNick() + " cerró conexión .\n");
+                                    break; // Sale del bucle while, lo que lleva al cierre de recursos
+                                }
 
-                                // Actualiza la UI si es necesario, por ejemplo, mostrar el mensaje en el área de texto
-                            } else if (objeto instanceof Usuario) {
-                                System.out.println("Usuario enviado: " + ((Usuario) objeto).getNick());
-                                // Realizar acciones adicionales si es necesario
+                                // Procesamiento normal de mensajes no relacionados con "salir"
+                                clientForm.getjTextAreaSala().append(mensaje.getOrigen().getNick() + " : " + mensajetxt + "\n");
+                                // enviamos el mensaje a todos
 
-                            } else if (objeto instanceof Chat) {
+                              
+
+                 
+
+                            } // Procesamiento de otros tipos de objetos como Usuario, etc.
+                            else if (objetoRecibido instanceof Usuario) {
+                                usuario = (Usuario) objetoRecibido;
+
+                                clientForm.getjTextAreaSala().append("Se ha conectado " + usuario.getNick()
+                                       );
+
+                            }else if (objetoRecibido instanceof Chat) {
 
                                 Chat newchat = new Chat();
-                                newchat = (Chat) objeto;
+                                newchat = (Chat) objetoRecibido;
 
                                 // actualizamos nuestra lista
                                 cargarNicks(newchat);
 
                             }
+ 
 
-                            System.out.println("Mensaje recibido del servidor: " + mensaje);
-                            // Aquí puedes actualizar la UI o manejar el mensaje como sea necesario
-                        } catch (ClassNotFoundException e) {
-                            System.out.println("Error al leer el objeto del servidor: " + e.getMessage());
+                        } catch (EOFException e) {
+                            System.out.println("Cliente ha cerrado la conexión.");
+                            break; // Salir del bucle
+                        } catch (ClassNotFoundException ex) {
+                            Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    }
 
-                    oos.close();
-                    ois.close();
-                    socket.close();
+                    }
                 } catch (IOException e) {
-                    System.out.println("Error al conectar o escuchar al servidor: " + e.getMessage());
+                    e.printStackTrace();
                 }
+
+                // Llamar al método para enviar la lista de usuarios a todos los clientes
+                //    enviarListaUsuarios();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (serverSocket != null) {
+                    serverSocket.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+                
+            }
+              
         });
 
         hiloEscucha.start();

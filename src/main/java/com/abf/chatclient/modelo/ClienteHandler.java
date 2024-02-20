@@ -37,16 +37,35 @@ public class ClienteHandler implements Runnable {
 
     
     
-    @Override
+    public Usuario getUsuario() {
+          
+         return  this.usuario ;
+           
+    }
+    
+    public Socket getSocket(){
+    
+          return this.socket;
+    }
+
+    
+    
+@Override
 public void run() {
+    // Declaración de los recursos fuera del try para poder cerrarlos en el finally
     ObjectOutputStream oos = null;
     ObjectInputStream ois = null;
 
     try {
+        // Instanciación de los streams. Es importante primero instanciar y abrir el ObjectOutputStream
+        // para evitar bloqueos en la instanciación del ObjectInputStream en el otro extremo de la conexión.
         oos = new ObjectOutputStream(socket.getOutputStream());
+        oos.flush(); // Asegúrate de vaciar el buffer tras la creación para evitar bloqueos en el otro extremo.
         ois = new ObjectInputStream(socket.getInputStream());
 
-        while (true) {
+        // Bucle principal del hilo para leer objetos enviados al servidor
+        while (!Thread.currentThread().isInterrupted()) {
+            
             Object objetoRecibido = ois.readObject();
 
             // Verificar si el objeto recibido es un Mensaje
@@ -69,7 +88,7 @@ public void run() {
                 // Procesamiento normal de mensajes no relacionados con "salir"
                 serverForm.getjTextAreaChatGeneral().append(mensaje.getOrigen().getNick() + " : " + mensajetxt + "\n");
                 // enviamos el mensaje a todos
-                servidorcontroller.enviarMesajeSala(mensaje);
+                servidorcontroller.enviarMensajesSala(mensaje);
                 
             }
             // Procesamiento de otros tipos de objetos como Usuario, etc.
@@ -92,12 +111,16 @@ public void run() {
                     oos.writeObject(chat);
                     oos.flush();
                     
-                    servidorcontroller.enviarListaUsuarios();
+                  //  servidorcontroller.enviarListaUsuarios();
                
-        }}}
-          catch (IOException | ClassNotFoundException e) {
+        }
+        }
+    } catch (IOException e) {
         e.printStackTrace();
-    } finally {
+    }   catch (ClassNotFoundException ex) {
+            Logger.getLogger(ClienteHandler.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+        // Cerrar los recursos en el bloque finally para asegurar que siempre se liberen
         try {
             if (oos != null) {
                 oos.close();
@@ -105,27 +128,22 @@ public void run() {
             if (ois != null) {
                 ois.close();
             }
-            if (socket != null) {
+            if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    System.out.println("Hilo del manejador de cliente terminado.");
 }
-    
-    
 
-    public Usuario getUsuario() {
-          
-         return  this.usuario ;
-           
-    }
     
-    public Socket getSocket(){
     
-          return this.socket;
-    }
-
+    
+    
+    
+    
+    
     
 }
