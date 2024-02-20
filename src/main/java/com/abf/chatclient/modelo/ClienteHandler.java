@@ -23,16 +23,14 @@ public class ClienteHandler implements Runnable {
     private Chat chat;
     private ServerForm serverForm;
     private ServidorController servidorcontroller;
-    private Map<String, ClienteHandler> clienteHandlersPorNick;
     private Usuario usuario;
     private Boolean refrescarusuarios = false;
     private String texto = "";
     
-    public ClienteHandler(Socket socket, Chat chat, ServerForm serverForm, Map<String, ClienteHandler> clienteHandlersPorNick, ServidorController servidorcontroller) {
+    public ClienteHandler(Socket socket, Chat chat, ServerForm serverForm, ServidorController servidorcontroller) {
         this.socket = socket;
         this.chat = chat;
         this.serverForm = serverForm;
-        this.clienteHandlersPorNick = clienteHandlersPorNick;
         this.servidorcontroller = servidorcontroller;
         
     }
@@ -70,6 +68,9 @@ public void run() {
 
                 // Procesamiento normal de mensajes no relacionados con "salir"
                 serverForm.getjTextAreaChatGeneral().append(mensaje.getOrigen().getNick() + " : " + mensajetxt + "\n");
+                // enviamos el mensaje a todos
+                servidorcontroller.enviarMesajeSala(mensaje);
+                
             }
             // Procesamiento de otros tipos de objetos como Usuario, etc.
              else if (objetoRecibido instanceof Usuario) {
@@ -85,12 +86,13 @@ public void run() {
                     servidorcontroller.getChat().chat.put(usuario, "entra");
                     
                     
-                // Agregar el ClienteHandler al mapa usando el nick del usuario como clave
-                    clienteHandlersPorNick.put(usuario.getNick(), this);
+                      
                     
                     this.chat = servidorcontroller.getChat();
                     oos.writeObject(chat);
                     oos.flush();
+                    
+                    servidorcontroller.enviarListaUsuarios();
                
         }}}
           catch (IOException | ClassNotFoundException e) {

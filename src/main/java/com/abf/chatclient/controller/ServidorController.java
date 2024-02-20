@@ -35,13 +35,12 @@ public class ServidorController implements Runnable {
     private final ServerForm serverForm;
     private int puerto = 9990;
     // mapa que contrendrá los hilos abiertos.
-    private Map<String, ClienteHandler> clienteHandlersPorNick;
+ 
 
     public ServidorController(ServerForm serverForm) {
         this.serverForm = serverForm;
         this.chat = new Chat();
-        this.clienteHandlersPorNick = new HashMap<>();
-        Usuario sala = new Usuario("SALA", "192.168.1.137", 9990, true);
+        Usuario sala = new Usuario("SALA_CHAT", "192.168.1.137", 9990, true);
         chat.getChat().put(sala, "");
     }
     
@@ -61,7 +60,7 @@ public class ServidorController implements Runnable {
                 Socket socket = serverSocket.accept();
 
                 // Crear un nuevo hilo para manejar la conexión
-                ClienteHandler clienteHandler = new ClienteHandler(socket, chat, serverForm, clienteHandlersPorNick, this);
+                ClienteHandler clienteHandler = new ClienteHandler(socket, chat, serverForm, this);
                 Thread thread = new Thread(clienteHandler);
                 thread.start();
 
@@ -83,32 +82,81 @@ public class ServidorController implements Runnable {
     }
 
     // método para enviar a todos los hilos la lista nueva de usuarios
-    public void enviarListaUsuarios() {
-        for (ClienteHandler handler : clienteHandlersPorNick.values()) {
+   public void enviarListaUsuarios() {
+    // Asumiendo que chat.getChat() devuelve un mapa con Usuario como clave
+    LinkedHashMap<Usuario, String> usuariosChat = chat.getChat();
 
+    // Preparar el objeto o mensaje a enviar. Si es solo una lista de usuarios,
+    // necesitarás crear este objeto basado en los usuarios en usuariosChat.
+    // Por simplicidad, aquí asumiré que simplemente reenvías el chat actualizado.
+    Object objetoAEnviar = this.chat; // O cualquier objeto que represente la lista de usuarios.
+
+    for (Usuario usuario : usuariosChat.keySet()) {
+        Socket socket = usuario.getSocket();
+        if (socket != null && socket.isConnected()) {
             try {
-                 Socket s = handler.getSocket();
-            ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
-            ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
-            oos.reset();    
-            oos.writeObject(this.chat);
-            oos.flush();
-            /*    
-            Mensaje nmen = new Mensaje();
-            
-            
-            nmen.setOrigen(null);
-            nmen.setDestino(null);
-            nmen.setMensaje(" Hola a todos, soy nuevo");
-            oos.writeObject(nmen);
-            */
-                 
-            } catch (IOException ex) {
-                Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, ex);
+                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                oos.reset(); // Asegura que el objeto se envíe incluso si no ha cambiado.
+                oos.writeObject(objetoAEnviar);
+                oos.flush();
+            } catch (IOException e) {
+                Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, e);
+                // Considera manejar adecuadamente la desconexión de un usuario aquí.
             }
-
         }
     }
+}
+   
+   
+   
+    // método para enviar a todos los hilos la lista nueva de usuarios
+   public void enviarMesajeSala( Mensaje mensaje) {
+    // Asumiendo que chat.getChat() devuelve un mapa con Usuario como clave
+    LinkedHashMap<Usuario, String> usuariosChat = chat.getChat();
+
+ 
+    Object objetoAEnviar = mensaje; // O cualquier objeto que represente la lista de usuarios.
+
+    for (Usuario usuario : usuariosChat.keySet()) {
+        
+         Usuario origen = mensaje.getOrigen();
+        if (usuario.getNick().equals("SALA_CHAT") || origen==usuario){
+        
+            // no reeviamos al mismo destinO O LA SALA
+            
+        }else{
+        Socket socketcli;
+        
+        try {
+            socketcli = new Socket(usuario.getIp(), usuario.getPuerto());
+              //Socket socket = usuario.getSocket();
+        if (socketcli != null && socketcli.isConnected()) {
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(socketcli.getOutputStream());
+                oos.reset(); // Asegura que el objeto se envíe incluso si no ha cambiado.
+                oos.writeObject(objetoAEnviar);
+                oos.flush();
+            } catch (IOException e) {
+                Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, e);
+                // Considera manejar adecuadamente la desconexión de un usuario aquí.
+            }
+        }    
+            
+            
+            
+        } catch (IOException ex) {
+            Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+  
+    }
+}
+   }
+   
+   
+   
+   
+   
+
 
     public Chat getChat() {
         return chat;

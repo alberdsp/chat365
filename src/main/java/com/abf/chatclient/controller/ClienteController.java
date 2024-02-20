@@ -29,6 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
@@ -38,7 +39,7 @@ import java.util.Map.Entry;
  */
 public class ClienteController implements Runnable {
 
-    private Chat chat;
+    private Chat chatcliente;
 
     private ChatClientForm chatClientForm;
     private Servidor servidor;
@@ -58,7 +59,7 @@ public class ClienteController implements Runnable {
     public ClienteController(ChatClientForm chatClientForm) {
 
         this.chatClientForm = chatClientForm;
-        this.chat = new Chat();
+        this.chatcliente = new Chat();
         this.servidor = new Servidor();
 
     }
@@ -71,8 +72,8 @@ public class ClienteController implements Runnable {
     }
 
     private void iniciarChat() {
-         
-        String ip =  chatClientForm.getjTextFieldIPServidor().getText();
+
+        String ip = chatClientForm.getjTextFieldIPServidor().getText();
         int puerto = Integer.parseInt(chatClientForm.getjTextFieldPuerto().getText());
         servidor.setIp(ip);
         servidor.setPuerto(puerto);
@@ -99,9 +100,8 @@ public class ClienteController implements Runnable {
         chatClientForm.getjTextFieldPuerto().setText("9990");
 
         jToggleConectar = chatClientForm.getjToggleButtonConectar();
-        
-        // listener de enviar mensajes
 
+        // listener de enviar mensajes
         jButtonEnviar.addActionListener(new ActionListener() {
 
             @Override
@@ -133,16 +133,12 @@ public class ClienteController implements Runnable {
                 if (conectado) {
                     cerrarconexion = false;
                 }
-             
-                        if (!cerrarconexion) {
-                            iniciarChat();
-                        }
-                    }
-                });
-           
 
-            
-        
+                if (!cerrarconexion) {
+                    iniciarChat();
+                }
+            }
+        });
 
     }
 
@@ -185,29 +181,27 @@ public class ClienteController implements Runnable {
             // Envía el objeto (Mensaje o Usuario)
             oos.writeObject(objeto);
 
-            // Imprime un mensaje en la consola/UI para confirmar el envío
             if (objeto instanceof Mensaje) {
-                System.out.println("Mensaje enviado: " + ((Mensaje) objeto).getMensaje());
-                // Actualiza la UI si es necesario, por ejemplo, mostrar el mensaje en el área de texto
+
             } else if (objeto instanceof Usuario) {
-                System.out.println("Usuario enviado: " + ((Usuario) objeto).getNick());
-                // Realizar acciones adicionales si es necesario
+
+                // mandamos el usuario y esperamos a recibir la lista del chat
                 try {
                     Object objetoRecibido = ois.readObject();
-                     if (objetoRecibido instanceof Chat) {
-                             
-                             Chat newchat = new Chat();
-                              newchat = (Chat) objetoRecibido;
-                              cargarNicks(newchat);
-                             
-                             }
-                    
-                    
+                    if (objetoRecibido instanceof Chat) {
+
+                        Chat newchat = new Chat();
+                        newchat = (Chat) objetoRecibido;
+
+                        // actualizamos nuestra lista
+                        cargarNicks(newchat);
+
+                    }
+
                 } catch (ClassNotFoundException ex) {
                     Logger.getLogger(ClienteController.class.getName()).log(Level.SEVERE, null, ex);
                 }
-             
-                
+
             }
 
         } catch (IOException ex) {
@@ -229,9 +223,70 @@ public class ClienteController implements Runnable {
             }
         }
     }
-    
-    
-    
-    
+
+    /**
+     * método para lanzar el servidor de escucha en el cliente, recibirá
+     * notificaciones y mensajes cuando sea necesario
+     */
+    private void servidorEscucha() {
+
+        Thread hiloEscucha;
+        hiloEscucha = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ServerSocket ssocket = new ServerSocket(9000);
+                    Socket socket = ssocket.accept();
+                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+
+                    // Escuchamos los mensajes entrantes del servidor
+                    while (!cerrarconexion) {
+
+                        try {
+
+                            Object objeto = ois.readObject();
+
+                            // si recibimos mensaje lo lleemos y lo pasamos al chat de destino.
+                            if (objeto instanceof Mensaje) {
+
+                                Usuario remitente = new Usuario();
+                                remitente = ((Mensaje) objeto).getOrigen();
+                                String mensajetxt = ((Mensaje) objeto).getMensaje();
+                                chatClientForm.getjTextAreaSala().append(remitente + " : " + mensajetxt);
+
+                                // Actualiza la UI si es necesario, por ejemplo, mostrar el mensaje en el área de texto
+                            } else if (objeto instanceof Usuario) {
+                                System.out.println("Usuario enviado: " + ((Usuario) objeto).getNick());
+                                // Realizar acciones adicionales si es necesario
+
+                            } else if (objeto instanceof Chat) {
+
+                                Chat newchat = new Chat();
+                                newchat = (Chat) objeto;
+
+                                // actualizamos nuestra lista
+                                cargarNicks(newchat);
+
+                            }
+
+                            System.out.println("Mensaje recibido del servidor: " + mensaje);
+                            // Aquí puedes actualizar la UI o manejar el mensaje como sea necesario
+                        } catch (ClassNotFoundException e) {
+                            System.out.println("Error al leer el objeto del servidor: " + e.getMessage());
+                        }
+                    }
+
+                    oos.close();
+                    ois.close();
+                    socket.close();
+                } catch (IOException e) {
+                    System.out.println("Error al conectar o escuchar al servidor: " + e.getMessage());
+                }
+            }
+        });
+
+        hiloEscucha.start();
+    }
 
 }

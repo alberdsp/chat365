@@ -19,7 +19,7 @@ public class Usuario implements Comparable<Usuario>,Serializable {
     
     String nick;
     String ip;
-    int puerto;
+    int puerto = 9000; // el puerto de escucha de cliente será 9000 fijo
     Boolean online;
     
     
@@ -33,7 +33,7 @@ public class Usuario implements Comparable<Usuario>,Serializable {
     public Usuario ( String nick, String ip, int puerto, Boolean online) {
     this.nick = nick;
     this.ip = ip;
-    this.puerto = puerto;
+    // puerto fijo 9000 
     this.online = online;
     
     }
@@ -111,7 +111,7 @@ public class Usuario implements Comparable<Usuario>,Serializable {
         
         InetAddress addres = socket.getInetAddress();
         this.ip = addres.getHostAddress();
-        this.puerto = socket.getPort();
+        
        
     }
     
