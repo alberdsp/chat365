@@ -1,12 +1,10 @@
-C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\ClienteChat.java
 C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\MainClient.java
-C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\modelo\vista\ServerForm.java
 C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\modelo\Mensaje.java
-C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\modelo\ClienteHandler.java
+C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\modelo\vista\ClienteForm.java
 C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\modelo\Usuario.java
 C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\controller\ClienteController.java
 C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\controller\ServidorController.java
 C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\MainServer.java
 C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\modelo\Servidor.java
-C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\modelo\vista\ClientForm.java
 C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\modelo\Chat.java
+C:\Users\Propietario\Documents\NetBeansProjects\chat365\src\main\java\com\abf\chatclient\modelo\vista\ServidorForm.java

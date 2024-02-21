@@ -5,7 +5,7 @@
 package com.abf.chatclient;
 
 import com.abf.chatclient.controller.ServidorController;
-import com.abf.chatclient.modelo.vista.ServerForm;
+import com.abf.chatclient.modelo.vista.ServidorForm;
 
 /**
  *
@@ -15,7 +15,7 @@ public class MainServer {
     
     public static void main(String[] args) {
         
-           ServerForm serverForm = new ServerForm();
+           ServidorForm serverForm = new ServidorForm();
            ServidorController servidorController = new ServidorController(serverForm);
            
             Thread hilochat = new Thread(servidorController);

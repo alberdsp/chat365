@@ -5,30 +5,24 @@
 package com.abf.chatclient.controller;
 
 import com.abf.chatclient.modelo.Chat;
-import com.abf.chatclient.modelo.ClienteHandler;
 import com.abf.chatclient.modelo.Mensaje;
-
 import com.abf.chatclient.modelo.Usuario;
-import com.abf.chatclient.modelo.vista.ServerForm;
+import com.abf.chatclient.modelo.vista.ServidorForm;
 import java.io.EOFException;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import java.util.Map;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.TreeMap;
+
 
 /**
  * Clase controladora del chat de servidor
@@ -38,13 +32,13 @@ import java.util.TreeMap;
 public class ServidorController implements Runnable {
 
     private Chat chat;
-    private final ServerForm serverForm;
+    private final ServidorForm serverForm;
     private int puerto = 9990;
     private Usuario usuario = null;
  
 
     // constructor
-    public ServidorController(ServerForm serverForm) {
+    public ServidorController(ServidorForm serverForm) {
         this.serverForm = serverForm;
         this.chat = new Chat();
         Usuario sala = new Usuario("SALA_CHAT", "localhost", 9990, true);
@@ -139,7 +133,7 @@ public class ServidorController implements Runnable {
                                 usuario.setSocket(socket);
 
                                 this.chat.getChat().put(usuario, "");
-                                // servidorcontroller.getChat().chat.put(usuario, "entra");
+                           
 
                                  oos.writeObject(chat);
                                  oos.flush();
@@ -277,10 +271,10 @@ public class ServidorController implements Runnable {
                     oos.flush();
 
                     try {
-                        // interrumpo el hilo 5 milisegundos 
+                        // interrumpo el hilo 1 milisegundos 
                         // para que de tiempo a recibir bien el paquete.
                         // de este modo funciona perfectamente
-                        Thread.sleep(05);
+                        Thread.sleep(01);
                     } catch (InterruptedException e) {
                         // El hilo ha sido interrumpido durante el sueño
                         Thread.currentThread().interrupt(); // Restablece el estado de interrupción
@@ -327,13 +321,13 @@ public class ServidorController implements Runnable {
             // Lista para guardar las direcciones IP como String
             List<String> ipAddresses = new ArrayList<>();
 
-            // Obtener una enumeración de todas las interfaces de red
+            // Obtenemos una enumeración de todas las interfaces de red
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
 
             while (interfaces.hasMoreElements()) {
                 NetworkInterface networkInterface = interfaces.nextElement();
 
-                // Ignorar interfaces que estén desactivadas o sean loopback
+                // Ignoramos las interfaces que estén desactivadas 
                 if (networkInterface.isUp() && !networkInterface.isLoopback()) {
                     Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
                     while (addresses.hasMoreElements()) {
@@ -346,21 +340,15 @@ public class ServidorController implements Runnable {
                 }
             }
 
-            // Imprimir las direcciones IP disponibles
+            // Imprimir las direcciones IP disponibles el textarea
             for (String ipAddress : ipAddresses) {
                 
-                serverForm.getjTextAreaChatGeneral().append(" - "+ipAddress + "\n");
+                serverForm.getjTextAreaChatGeneral().append(" - "+ ipAddress + "\n");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    
-  
-    
-    
-    
-    
     
     
 

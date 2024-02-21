@@ -10,12 +10,12 @@ import javax.swing.JTextArea;
  *
  * @author Alber
  */
-public class ServerForm extends javax.swing.JFrame {
+public class ServidorForm extends javax.swing.JFrame {
 
     /**
      * Creates new form ServerForm
      */
-    public ServerForm() {
+    public ServidorForm() {
         initComponents();
     }
 

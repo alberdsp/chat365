@@ -5,7 +5,7 @@
 package com.abf.chatclient;
 
 import com.abf.chatclient.controller.ClienteController;
-import com.abf.chatclient.modelo.vista.ClientForm;
+import com.abf.chatclient.modelo.vista.ClienteForm;
 
 /**
  *
@@ -16,7 +16,7 @@ public class MainClient {
       
     public static void main(String[] args) {
         
-           ClientForm chatClientForm = new ClientForm();
+           ClienteForm chatClientForm = new ClienteForm();
            ClienteController clienteController = new ClienteController(chatClientForm);
            
             Thread hilochatcliente = new Thread(clienteController);
