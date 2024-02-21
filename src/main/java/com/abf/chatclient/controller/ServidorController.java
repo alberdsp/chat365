@@ -19,8 +19,13 @@ import java.net.Socket;
 
 import java.util.Map;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.TreeMap;
@@ -36,12 +41,13 @@ public class ServidorController implements Runnable {
     private final ServerForm serverForm;
     private int puerto = 9990;
     private Usuario usuario = null;
-    // mapa que contrendrá los hilos abiertos.
+ 
 
+    // constructor
     public ServidorController(ServerForm serverForm) {
         this.serverForm = serverForm;
         this.chat = new Chat();
-        Usuario sala = new Usuario("SALA_CHAT", "192.168.1.137", 9990, true);
+        Usuario sala = new Usuario("SALA_CHAT", "localhost", 9990, true);
         chat.getChat().put(sala, "");
     }
 
@@ -53,8 +59,18 @@ public class ServidorController implements Runnable {
         try {
             // Creamos el servidor que escucha siempre en el puerto especificado
             serverSocket = new ServerSocket(9990);
-            serverForm.getjTextAreaChatGeneral().setText("Servidor escuchando en el puerto " + puerto + "\n");
+            String ipserver = serverSocket.getInetAddress().getHostAddress();
+            serverForm.getjTextAreaChatGeneral().append("Servidor escuchando en el puerto "
+                    + puerto + "\n");
+            serverForm.getjTextAreaChatGeneral().append("Ips a la escucha :"
+                    + "\n");
+            
+            // listamos las ips que tiene el servidor.
+            listarIpsServidor();
+            
 
+            
+            // quedamos a la escucha
             while (true) {
                 // Aceptar una nueva conexión
                 Socket socket = serverSocket.accept();
@@ -182,9 +198,11 @@ public class ServidorController implements Runnable {
         }
     }
 
-    // método para enviar a todos los hilos la lista nueva de usuarios
+        // método para enviar a todos los hilos la lista nueva de usuarios
     public void enviarListaUsuarios() {
-        // Asumiendo que chat.getChat() devuelve un mapa con Usuario como clave
+        
+        // cargamos el mapa del chat
+        
         LinkedHashMap<Usuario, String> usuariosChat = chat.getChat();
 
       for (Usuario usuario : usuariosChat.keySet()) {
@@ -200,17 +218,17 @@ public class ServidorController implements Runnable {
                     socket = new Socket(usuario.getIp(), usuario.getPuerto());
                     oos = new ObjectOutputStream(socket.getOutputStream());
 
-                    // Enviar el mensaje
+                    // Enviar chat con los usuarios
                     oos.writeObject(chat);
                     oos.flush();
 
                     try {
-                        // interrumpo el hilo 5 milisegundos 
+                        // interrumpo el hilo 1 milisegundos 
                         // para que de tiempo a recibir bien el paquete.
                         // de este modo funciona perfectamente
-                        Thread.sleep(05);
+                        Thread.sleep(01);
                     } catch (InterruptedException e) {
-                        // El hilo ha sido interrumpido durante el sueño
+                        // El hilo ha sido interrumpido 
                         Thread.currentThread().interrupt(); // Restablece el estado de interrupción
                         System.err.println("Interrupción durante la pausa: " + e.getMessage());
                     }
@@ -243,7 +261,9 @@ public class ServidorController implements Runnable {
             // Verificar que no enviamos al mismo origen o a la "SALA_CHAT"
             //    if (!usuario.getNick().equals("SALA_CHAT") && !mensaje.getOrigen().equals(usuario)) {
 
-            if (!usuario.getNick().equals("SALA_CHAT") && !mensaje.getOrigen().getNick().equals(usuario.getNick())) {
+            if (!usuario.getNick().equals("SALA_CHAT") &&
+                    !mensaje.getOrigen().getNick().equals(usuario.getNick())&&
+                   mensaje.getDestino().getNick().equals("CHATGENERAL")) {
                 Socket socket = null;
                 ObjectOutputStream oos = null;
 
@@ -294,6 +314,55 @@ public class ServidorController implements Runnable {
     public void setChat(Chat chat) {
         this.chat = chat;
     }
+    
+    public void listarIpsServidor (){
+        
+
+        
+    try {
+        
+        
+          
+        
+            // Lista para guardar las direcciones IP como String
+            List<String> ipAddresses = new ArrayList<>();
+
+            // Obtener una enumeración de todas las interfaces de red
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = interfaces.nextElement();
+
+                // Ignorar interfaces que estén desactivadas o sean loopback
+                if (networkInterface.isUp() && !networkInterface.isLoopback()) {
+                    Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+                    while (addresses.hasMoreElements()) {
+                        InetAddress address = addresses.nextElement();
+                        // Agregar la dirección IP a la lista, excluyendo direcciones IPv6 si se desea
+                        if (address.getHostAddress().indexOf(':') == -1) { // Excluir direcciones IPv6
+                            ipAddresses.add(address.getHostAddress());
+                        }
+                    }
+                }
+            }
+
+            // Imprimir las direcciones IP disponibles
+            for (String ipAddress : ipAddresses) {
+                
+                serverForm.getjTextAreaChatGeneral().append(" - "+ipAddress + "\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+  
+    
+    
+    
+    
+    
+    
 
 }
 
