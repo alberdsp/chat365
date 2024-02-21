@@ -74,7 +74,7 @@ public class ClienteController implements Runnable {
         servidor.setIp(ip);
         servidor.setPuerto(puerto);
         usuario = new Usuario();
-        destino = new Usuario("CHATGENERAL", servidor.getIp(), servidor.getPuerto(), true);
+        destino = new Usuario("SALA_CHAT", servidor.getIp(), servidor.getPuerto(), true);
         String nick = clienteForm.getjTextFieldNick().getText();
         usuario.setNick(nick);
         enviar(usuario);
@@ -106,16 +106,23 @@ public class ClienteController implements Runnable {
             @Override
             public void actionPerformed(ActionEvent e) {
 
+                // establece el usuario clicado para el destino
+                usuarioClicado();
+
                 // Construye el mensaje a enviar
                 Mensaje mensajenv = new Mensaje();
                 mensajenv.setDestino(destino);
                 mensajenv.setOrigen(usuario);
                 mensajetxt = clienteForm.getjTextFieldTextoAenviar().getText();
                 mensajenv.setMensaje(mensajetxt);
-
                 // Envía el mensaje
                 enviar(mensajenv);
-                clienteForm.getjTextAreaSala().append("yo: " + mensajetxt + "\n");
+
+                // actualizamos el mensaje para que salga en mi ventana
+                mensajenv.setMensaje(mensajetxt);
+                // mandamos a procesar el mensaje         
+                procesarMensaje(mensajenv);
+                //    clienteForm.getjTextAreaSala().append("yo: " + mensajetxt + "\n");
 
                 // Limpia el campo de texto
                 clienteForm.getjTextFieldTextoAenviar().setText("");
@@ -147,7 +154,7 @@ public class ClienteController implements Runnable {
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
                     // detectamos el clic y ejecutamos   
-                    nickClic();
+                    actualizarVentanaChat();
                 }
             }
         });
@@ -175,13 +182,26 @@ public class ClienteController implements Runnable {
             Usuario usuariobusc = entry.getKey();
 
             String nick = usuariobusc.getNick();
-            listaNicks.addElement(nick);
+
+            if (!nick.equals(usuario.getNick())) {
+
+                listaNicks.addElement(nick);
+
+            }
 
             // Verificar si este.nick ya existe en nuestro chat
-            boolean existe = chatcliente.getChat().containsValue(usuariobusc); // Asume this.chat es un Map
+            //   boolean existe = chatcliente.getChat().containsKey(usuariobusc);
+            boolean existe = false;
+            for (Usuario usuario : chatcliente.getChat().keySet()) {
+                if (usuario.getNick().equals(usuariobusc.getNick())) {
+                    existe = true;
+                    break; // Salir del bucle una vez encontrado el usuario
+                }
+            }
 
             // Si no existe, lo añadimos con la conversación vacia
             if (!existe) {
+
                 chatcliente.getChat().put(usuariobusc, ""); // Asumiendo que el valor es un String vacío o el valor adecuado
             }
 
@@ -195,14 +215,12 @@ public class ClienteController implements Runnable {
         }
 
         // Crear el JList con el modelo
-      
         if (!listaNicks.isEmpty()) { // Verificar que la lista no esté vacía
 
             jListUsuarios.setModel(listaNicks);
             jListUsuarios.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             clienteForm.getjListUsuarios().setSelectedIndex(0);
         }
-      
 
     }
 
@@ -324,8 +342,9 @@ public class ClienteController implements Runnable {
                                         }
 
                                         // Procesamiento normal de mensajes no relacionados con "salir"
-                                        clienteForm.getjTextAreaSala().append(mensaje.getOrigen().getNick() + " : " + mensajetxt + "\n");
+                                        //    clienteForm.getjTextAreaSala().append(mensaje.getOrigen().getNick() + " : " + mensajetxt + "\n");
                                         // enviamos el mensaje a todos
+                                        procesarMensaje(mensaje);
 
                                     } // Procesamiento de otros tipos de objetos como Usuario, etc.
                                     else if (objetoRecibido instanceof Usuario) {
@@ -377,9 +396,9 @@ public class ClienteController implements Runnable {
     }
 
     /**
-     * método que controla el nick clicado
+     * actualizar los chats
      */
-    public void nickClic() {
+    public void actualizarVentanaChat() {
 
         String nickdestino = clienteForm.getjListUsuarios().getSelectedValue();
 
@@ -397,13 +416,103 @@ public class ClienteController implements Runnable {
             if (nickdestino != null) {
                 if (nickdestino.equals(usuario.getNick())) {
 
-                    this.destino = usuario; // establecemos el destino
-
                     clienteForm.getjTextAreaSala().setText(conversacion);
 
                 }
             }
         }
+
+    }
+
+    /**
+     * Método que establece el destino según el item jList clicado.
+     *
+     */
+    public void usuarioClicado() {
+
+        Usuario usuarioclicado = new Usuario();
+
+        String nickclicado = clienteForm.getjListUsuarios().getSelectedValue();
+
+        // declaramos mapa para recorrer
+        LinkedHashMap<Usuario, String> chat = chatcliente.getChat();
+
+        // iteramos para buscar el ususario  clicado
+        for (Entry<Usuario, String> entrada : chat.entrySet()) {
+
+            usuarioclicado = entrada.getKey(); //traemos usuario
+            // si no es nulo
+            if (nickclicado != null) {
+                if (nickclicado.equals(usuario.getNick())) {
+
+                    this.destino = usuarioclicado; // establecemos el destino
+
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Método para procesar los mensajes
+     *
+     * @param mensaje recibe un objeto tipo mensaje
+     */
+    public void procesarMensaje(Mensaje mensaje) {
+
+        String mensajetxt = mensaje.getMensaje();
+        String nickdestino = mensaje.getDestino().getNick();
+        Usuario destinomensaje = mensaje.getDestino();
+        String nickorigen = mensaje.getOrigen().getNick();
+        String minick = this.usuario.getNick();
+
+        // vemos quien manda el mensaje
+        if (nickorigen.equalsIgnoreCase(minick)) {
+            //  ponemos yo:
+            mensajetxt = "yo : " + mensajetxt;
+        } else {
+            // si el mensaje no lo ha mandado el usuario ponemos nick
+            mensajetxt = nickorigen + " : " + mensajetxt;
+
+        }
+
+        // declaramos mapa para recorrer
+        LinkedHashMap<Usuario, String> chat = new LinkedHashMap<>(chatcliente.getChat());
+
+        // iteramos para buscar el ususario destino clicado
+        for (Entry<Usuario, String> entrada : chat.entrySet()) {
+
+            Usuario usuario = entrada.getKey(); //traemos usuario
+            String conversacion = entrada.getValue();// traemos conversación
+            // si encontramos nick en la sala 
+
+            // si no es nulo
+            if (nickdestino != null) {
+                if (nickdestino.equals(usuario.getNick())) {
+
+                    String valorActual = entrada.getValue();
+                    String nuevoValor = "";
+
+                    // si es el primer mensaje no hay retorno de carro
+                    if (valorActual.equals("")) {
+
+                        nuevoValor = mensajetxt;
+
+                    } else {
+
+                        nuevoValor = valorActual + "\n" + mensajetxt;
+
+                    }
+
+                    chatcliente.getChat().put(destinomensaje, nuevoValor);
+                }
+
+            }
+        }
+
+        // Procesamiento normal de mensajes no relacionados con "salir"
+        // clienteForm.getjTextAreaSala().append(mensaje.getOrigen().getNick() + " : " + mensajetxt + "\n");
+        actualizarVentanaChat();
 
     }
 

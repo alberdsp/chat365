@@ -104,8 +104,13 @@ public class ServidorController implements Runnable {
                                     break; // Sale del bucle while, lo que lleva al cierre de recursos
                                 }
 
-                                // Procesamiento normal de mensajes no relacionados con "salir"
+                                   String nickdestino = mensaje.getDestino().getNick();
+                                if (nickdestino.equals("SALA_CHAT")){
+                                
+                                //  Si el mensaje no es privado lo ponemos en el log del chat
                                 serverForm.getjTextAreaChatGeneral().append(mensaje.getOrigen().getNick() + " : " + mensajetxt + "\n");
+                                }
+                                
                                 // enviamos el mensaje a todos
 
                                 Thread enviarMensajes = new Thread(new Runnable() {
@@ -252,12 +257,19 @@ public class ServidorController implements Runnable {
         LinkedHashMap<Usuario, String> usuariosChat = chat.getChat();
 
         for (Usuario usuario : usuariosChat.keySet()) {
-            // Verificar que no enviamos al mismo origen o a la "SALA_CHAT"
+            //Recorremos la sala y reenviamos los mensajes a su destino   
+            //Verificamos que no enviamos al mismo origen o a la "SALA_CHAT"
             //    if (!usuario.getNick().equals("SALA_CHAT") && !mensaje.getOrigen().equals(usuario)) {
 
-            if (!usuario.getNick().equals("SALA_CHAT") &&
-                    !mensaje.getOrigen().getNick().equals(usuario.getNick())&&
-                   mensaje.getDestino().getNick().equals("CHATGENERAL")) {
+                
+                   
+           
+            String nick = usuario.getNick();
+            String nickorigen = mensaje.getOrigen().getNick();
+            
+            
+            
+           if (!nick.equals("SALA_CHAT") && !nickorigen.equals(nick)) {
                 Socket socket = null;
                 ObjectOutputStream oos = null;
 
