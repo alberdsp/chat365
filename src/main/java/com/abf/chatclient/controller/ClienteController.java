@@ -95,7 +95,7 @@ public class ClienteController implements Runnable {
         jToggleConectar = clienteForm.getjToggleButtonConectar();
 
         clienteForm.setVisible(true);
-        clienteForm.getjTextFieldIPServidor().setText("192.168.100.134");
+        clienteForm.getjTextFieldIPServidor().setText("192.168.100.136");
         clienteForm.getjTextFieldPuerto().setText("9990");
 
         jToggleConectar = clienteForm.getjToggleButtonConectar();
@@ -116,7 +116,6 @@ public class ClienteController implements Runnable {
                 mensajetxt = clienteForm.getjTextFieldTextoAenviar().getText();
                 mensajenv.setMensaje(mensajetxt);
                 // Envía el mensaje
-                
 
                 // actualizamos el mensaje para que salga en mi ventana
                 // mandamos a procesar el mensaje         
@@ -347,15 +346,9 @@ public class ClienteController implements Runnable {
                                         }
 
                                         // Procesamiento normal de mensajes no relacionados con "salir"
-                                        //    clienteForm.getjTextAreaSala().append(mensaje.getOrigen().getNick() + " : " + mensajetxt + "\n");
+                                        //  
                                         // enviamos el mensaje a todos
                                         procesarMensaje(mensaje);
-
-                                  /*      try {
-                                            Thread.sleep(01);
-                                        } catch (InterruptedException ex) {
-                                            Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, ex);
-                                        }       */
 
                                     } // Procesamiento de otros tipos de objetos como Usuario, etc.
                                     else if (objetoRecibido instanceof Usuario) {
@@ -414,23 +407,23 @@ public class ClienteController implements Runnable {
     public void actualizarVentanaChat() {
 
         String nickdestino = clienteForm.getjListUsuarios().getSelectedValue();
-         if (nickdestino != null) {
-        // declaramos mapa para recorrer
-        LinkedHashMap<Usuario, String> chat = chatcliente.getChat();
+        if (nickdestino != null) {
+            // declaramos mapa para recorrer
+            LinkedHashMap<Usuario, String> chat = chatcliente.getChat();
 
-        // iteramos para buscar el ususario destino clicado
-        for (Entry<Usuario, String> entrada : chat.entrySet()) {
+            // iteramos para buscar el ususario destino clicado
+            for (Entry<Usuario, String> entrada : chat.entrySet()) {
 
-            Usuario usuarioiterado = entrada.getKey(); //traemos usuario
-            String conversacion = entrada.getValue();// traemos conversación
-            // si encontramos nick en la sala 
-            String  nickiterado = usuarioiterado.getNick();
-            // si no es nulo
-        
+                Usuario usuarioiterado = entrada.getKey(); //traemos usuario
+                String conversacion = entrada.getValue();// traemos conversación
+                // si encontramos nick en la sala 
+                String nickiterado = usuarioiterado.getNick();
+                // si no es nulo
+
                 if (nickdestino.equals(nickiterado)) {
 
                     clienteForm.getjTextAreaSala().setText(conversacion);
-                  
+
                 }
             }
         }
@@ -503,11 +496,10 @@ public class ClienteController implements Runnable {
             String conversacion = entrada.getValue();// traemos conversación
             String nickiterado = usuarioiterado.getNick();
             if (nickorigen != null) {
-            // si encontramos nick en la sala 
-            // si no es nulo, buscamos en el chat el nick que nos escribió
-            if (nickdestino.equals("SALA_CHAT")) {
+                // si encontramos nick en la sala 
+                // si no es nulo, buscamos en el chat el nick que nos escribió
+                if (nickdestino.equals("SALA_CHAT")) {
 
-             
                     if (nickdestino.equals(nickiterado)) {
 
                         String valorActual = entrada.getValue();
@@ -528,12 +520,32 @@ public class ClienteController implements Runnable {
 
                     }
 
-                }
+                } else {
 
-            } else {
+                    // si el destino coincide con el nick iterado y
+                    // soy yo quien lo manda, almacenamos en el iterado
+                    if (nickdestino.equals(nickiterado) && nickorigen.equals(minick)) {
 
-                if (nickorigen != null) {
-                    if (nickorigen.equals(nickiterado)) {
+                        String valorActual = entrada.getValue();
+                        String nuevoValor = "";
+
+                        // si es el primer mensaje no hay retorno de carro
+                        if (valorActual.equals("")) {
+
+                            nuevoValor = mensajetxt;
+
+                        } else {
+
+                            nuevoValor = valorActual + "\n" + mensajetxt;
+
+                        }
+
+                        chatcliente.getChat().put(usuarioiterado, nuevoValor);
+                    }
+
+                    // si el destino coincide con el nick iterado y
+                    // soy yo quien lo manda, almacenamos en el iterado
+                    if (nickdestino.equals(minick) && nickorigen.equals(nickiterado)) {
 
                         String valorActual = entrada.getValue();
                         String nuevoValor = "";
@@ -556,8 +568,7 @@ public class ClienteController implements Runnable {
             }
         }
 
-        // Procesamiento normal de mensajes no relacionados con "salir"
-        // clienteForm.getjTextAreaSala().append(mensaje.getOrigen().getNick() + " : " + mensajetxt + "\n");
+        // actualizamos la ventana
         actualizarVentanaChat();
 
     }
