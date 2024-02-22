@@ -122,8 +122,14 @@ public class ClienteController implements Runnable {
                 mensajenv.setMensaje(mensajetxt);
                 // mandamos a procesar el mensaje         
                 procesarMensaje(mensajenv);
-                //    clienteForm.getjTextAreaSala().append("yo: " + mensajetxt + "\n");
 
+                try {
+                    Thread.sleep(01);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                //    clienteForm.getjTextAreaSala().append("yo: " + mensajetxt + "\n");
                 // Limpia el campo de texto
                 clienteForm.getjTextFieldTextoAenviar().setText("");
 
@@ -153,8 +159,13 @@ public class ClienteController implements Runnable {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
+
                     // detectamos el clic y ejecutamos   
                     actualizarVentanaChat();
+
+                    // compribamos el usuario clicado
+                    usuarioClicado();
+
                 }
             }
         });
@@ -346,6 +357,12 @@ public class ClienteController implements Runnable {
                                         // enviamos el mensaje a todos
                                         procesarMensaje(mensaje);
 
+                                        try {
+                                            Thread.sleep(01);
+                                        } catch (InterruptedException ex) {
+                                            Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
+
                                     } // Procesamiento de otros tipos de objetos como Usuario, etc.
                                     else if (objetoRecibido instanceof Usuario) {
                                         usuario = (Usuario) objetoRecibido;
@@ -373,6 +390,8 @@ public class ClienteController implements Runnable {
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
+
+                            System.out.println(e);
                         }
 
                     }
@@ -430,7 +449,7 @@ public class ClienteController implements Runnable {
      */
     public void usuarioClicado() {
 
-        Usuario usuarioclicado = new Usuario();
+        Usuario usuarioitera = new Usuario();
 
         String nickclicado = clienteForm.getjListUsuarios().getSelectedValue();
 
@@ -440,13 +459,16 @@ public class ClienteController implements Runnable {
         // iteramos para buscar el ususario  clicado
         for (Entry<Usuario, String> entrada : chat.entrySet()) {
 
-            usuarioclicado = entrada.getKey(); //traemos usuario
+            usuarioitera = entrada.getKey(); //traemos usuario
+
+            String nickitera = usuarioitera.getNick();
+
             // si no es nulo
             if (nickclicado != null) {
-                if (nickclicado.equals(usuario.getNick())) {
+                if (nickclicado.equals(nickitera)) {
 
-                    this.destino = usuarioclicado; // establecemos el destino
-
+                    this.destino = usuarioitera; // establecemos el destino
+                    break;
                 }
             }
         }
@@ -463,6 +485,7 @@ public class ClienteController implements Runnable {
         String mensajetxt = mensaje.getMensaje();
         String nickdestino = mensaje.getDestino().getNick();
         Usuario destinomensaje = mensaje.getDestino();
+        Usuario origenmensaje = mensaje.getOrigen();
         String nickorigen = mensaje.getOrigen().getNick();
         String minick = this.usuario.getNick();
 
@@ -482,31 +505,60 @@ public class ClienteController implements Runnable {
         // iteramos para buscar el ususario destino clicado
         for (Entry<Usuario, String> entrada : chat.entrySet()) {
 
-            Usuario usuario = entrada.getKey(); //traemos usuario
+            Usuario usuarioiterado = entrada.getKey(); //traemos usuario
             String conversacion = entrada.getValue();// traemos conversación
+            String nickiterado = usuarioiterado.getNick();
+
             // si encontramos nick en la sala 
+            // si no es nulo, buscamos en el chat el nick que nos escribió
+            if (nickdestino.equals("SALA_CHAT")) {
 
-            // si no es nulo
-            if (nickdestino != null) {
-                if (nickdestino.equals(usuario.getNick())) {
+                if (nickorigen != null) {
+                    if (nickdestino.equals(nickiterado)) {
 
-                    String valorActual = entrada.getValue();
-                    String nuevoValor = "";
+                        String valorActual = entrada.getValue();
+                        String nuevoValor = "";
 
-                    // si es el primer mensaje no hay retorno de carro
-                    if (valorActual.equals("")) {
+                        // si es el primer mensaje no hay retorno de carro
+                        if (valorActual.equals("")) {
 
-                        nuevoValor = mensajetxt;
+                            nuevoValor = mensajetxt;
 
-                    } else {
+                        } else {
 
-                        nuevoValor = valorActual + "\n" + mensajetxt;
+                            nuevoValor = valorActual + "\n" + mensajetxt;
+
+                        }
+
+                        chatcliente.getChat().put(destinomensaje, nuevoValor);
 
                     }
 
-                    chatcliente.getChat().put(destinomensaje, nuevoValor);
                 }
 
+            } else {
+
+                if (nickorigen != null) {
+                    if (nickorigen.equals(nickiterado)) {
+
+                        String valorActual = entrada.getValue();
+                        String nuevoValor = "";
+
+                        // si es el primer mensaje no hay retorno de carro
+                        if (valorActual.equals("")) {
+
+                            nuevoValor = mensajetxt;
+
+                        } else {
+
+                            nuevoValor = valorActual + "\n" + mensajetxt;
+
+                        }
+
+                        chatcliente.getChat().put(destinomensaje, nuevoValor);
+                    }
+
+                }
             }
         }
 

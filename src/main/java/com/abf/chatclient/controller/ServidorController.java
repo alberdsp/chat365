@@ -264,15 +264,21 @@ public class ServidorController implements Runnable {
                 
                    
            
-            String nick = usuario.getNick();
+            String nickiterado = usuario.getNick();
             String nickorigen = mensaje.getOrigen().getNick();
+            String nickdestino = mensaje.getDestino().getNick();
             
             
+           //  si el destino es para la sala general se manda a todos
+           // menos al propio que lo envia y a la propia sala
+           
+           if (nickdestino.equals("SALA_CHAT")){ 
             
-           if (!nick.equals("SALA_CHAT") && !nickorigen.equals(nick)) {
+           if (!nickiterado.equals("SALA_CHAT") && !nickorigen.equals(nickiterado)) {
                 Socket socket = null;
                 ObjectOutputStream oos = null;
 
+       
                 try {
                     // Establecer una nueva conexión con cada usuario
                     socket = new Socket(usuario.getIp(), usuario.getPuerto());
@@ -309,6 +315,53 @@ public class ServidorController implements Runnable {
                     }
                 }
             }
+           // si nos encontramos en el usuario de destino le mandamos el mensaje solo a el
+           } else if (nickiterado.equals(nickdestino)){
+           
+               
+                Socket socket = null;
+                ObjectOutputStream oos = null;
+
+       
+                try {
+                    // Establecer una nueva conexión con cada usuario
+                    socket = new Socket(usuario.getIp(), usuario.getPuerto());
+                    oos = new ObjectOutputStream(socket.getOutputStream());
+
+                    // Enviar el mensaje
+                    oos.writeObject(mensaje);
+                    oos.flush();
+
+                    try {
+                        // interrumpo el hilo 1 milisegundos 
+                        // para que de tiempo a recibir bien el paquete.
+                        // de este modo funciona perfectamente
+                        Thread.sleep(01);
+                    } catch (InterruptedException e) {
+                        // El hilo ha sido interrumpido durante el sueño
+                        Thread.currentThread().interrupt(); // Restablece el estado de interrupción
+                        System.err.println("Interrupción durante la pausa: " + e.getMessage());
+                    }
+                } catch (IOException e) {
+                    Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, "Error al enviar mensaje a " + usuario.getNick(), e);
+                    // Manejo de errores, como intentos de reconexión o eliminación de usuario inactivo
+                } finally {
+                    // Cerrar los recursos
+                    try {
+                        if (oos != null) {
+                            oos.close();
+                        }
+                        if (socket != null && !socket.isClosed()) {
+                            socket.close();
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(ServidorController.class.getName()).log(Level.SEVERE, "Error al cerrar la conexión con " + usuario.getNick(), ex);
+                    }
+                }
+            }
+         
+           
+           
         }
 
     }
